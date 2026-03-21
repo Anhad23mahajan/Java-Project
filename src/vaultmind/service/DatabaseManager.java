@@ -35,13 +35,14 @@ public class DatabaseManager {
 
     // Get user by username
     public static String[] getUser(String username) {
-        String sql = "SELECT username, password_hash, role FROM users WHERE username = ?";
+        String sql = "SELECT user_id, username, password_hash, role FROM users WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new String[]{
+                        String.valueOf(rs.getInt("user_id")),
                         rs.getString("username"),
                         rs.getString("password_hash"),
                         rs.getString("role")
@@ -87,6 +88,48 @@ public class DatabaseManager {
             System.out.println("=====================");
         } catch (SQLException e) {
             System.out.println("Error fetching users: " + e.getMessage());
+        }
+    }
+
+    // Add a file record to the database
+    public static boolean addFile(int userId, String fileName, String encryptedPath) {
+        String sql = "INSERT INTO vault_files (user_id, file_name, encrypted_path) VALUES (?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, fileName);
+            stmt.setString(3, encryptedPath);
+            stmt.executeUpdate();
+            System.out.println("File stored: " + fileName);
+            return true;
+        } catch (SQLException e) {
+            System.out.println("Error storing file: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Get all files belonging to a user
+    public static void getFilesByUser(int userId) {
+        String sql = "SELECT file_id, file_name, encrypted_path, uploaded_at FROM vault_files WHERE user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            System.out.println("\n===== YOUR FILES =====");
+            boolean hasFiles = false;
+            while (rs.next()) {
+                hasFiles = true;
+                System.out.println("ID: " + rs.getInt("file_id") +
+                        " | Name: " + rs.getString("file_name") +
+                        " | Path: " + rs.getString("encrypted_path") +
+                        " | Uploaded: " + rs.getString("uploaded_at"));
+            }
+            if (!hasFiles) {
+                System.out.println("No files found.");
+            }
+            System.out.println("======================");
+        } catch (SQLException e) {
+            System.out.println("Error fetching files: " + e.getMessage());
         }
     }
 
