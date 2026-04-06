@@ -23,6 +23,8 @@ bin/
 /nbdist/
 /.nb-gradle/
 
+problem_statement.txt
+
 ### VS Code ###
 .vscode/
 

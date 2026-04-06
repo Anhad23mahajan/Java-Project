@@ -1,23 +1,43 @@
 package vaultmind.service;
 
+import vaultmind.model.User;
+import vaultmind.model.VaultFile;
+
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseManager {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/vaultmind";
-    private static final String USER = "root";
-    private static final String PASSWORD = "Anhad@14576";
+    private static final String URL = System.getenv().getOrDefault(
+            "VAULTMIND_DB_URL",
+            "jdbc:postgresql://localhost:5432/vaultmind"
+    );
+    private static final String USER = System.getenv().getOrDefault(
+            "VAULTMIND_DB_USER",
+            "postgres"
+    );
+    private static final String PASSWORD = System.getenv().getOrDefault(
+            "VAULTMIND_DB_PASSWORD",
+            "postgres"
+    );
 
     public static Connection getConnection() throws SQLException {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("PostgreSQL JDBC driver not found. Add the PostgreSQL JDBC jar to the classpath.", e);
+        }
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
-    // Register a new user
-    public static boolean addUser(String username, String passwordHash, String role) {
+    public static boolean addUser(String username, String passwordHash, String role) throws SQLException {
         String sql = "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -25,74 +45,68 @@ public class DatabaseManager {
             stmt.setString(2, passwordHash);
             stmt.setString(3, role);
             stmt.executeUpdate();
-            System.out.println("User registered: " + username);
             return true;
-        } catch (SQLException e) {
-            System.out.println("Registration failed: " + e.getMessage());
-            return false;
         }
     }
 
-    // Get user by username
-    public static String[] getUser(String username) {
-        String sql = "SELECT user_id, username, password_hash, role FROM users WHERE username = ?";
+    public static User getUserByUsername(String username) throws SQLException {
+        String sql = "SELECT user_id, username, password_hash, role, created_at FROM users WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new String[]{
-                        String.valueOf(rs.getInt("user_id")),
-                        rs.getString("username"),
-                        rs.getString("password_hash"),
-                        rs.getString("role")
-                };
+                return mapUser(rs);
             }
-        } catch (SQLException e) {
-            System.out.println("Error fetching user: " + e.getMessage());
         }
         return null;
     }
 
-    // Hash a password using SHA-256
+    public static User getUserById(int userId) throws SQLException {
+        String sql = "SELECT user_id, username, password_hash, role, created_at FROM users WHERE user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapUser(rs);
+            }
+        }
+        return null;
+    }
+
     public static String hashPassword(String password) {
         try {
             java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(password.getBytes());
+            byte[] hash = md.digest(password.getBytes(StandardCharsets.UTF_8));
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
                 hexString.append(hex);
             }
             return hexString.toString();
         } catch (Exception e) {
-            System.out.println("Hashing failed: " + e.getMessage());
             return null;
         }
     }
 
-    // Get all users (admin only)
-    public static void getAllUsers() {
-        String sql = "SELECT user_id, username, role, created_at FROM users";
+    public static List<User> getAllUsers() throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT user_id, username, password_hash, role, created_at FROM users ORDER BY created_at DESC";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
-            System.out.println("\n===== ALL USERS =====");
             while (rs.next()) {
-                System.out.println("ID: " + rs.getInt("user_id") +
-                        " | Username: " + rs.getString("username") +
-                        " | Role: " + rs.getString("role") +
-                        " | Joined: " + rs.getString("created_at"));
+                users.add(mapUser(rs));
             }
-            System.out.println("=====================");
-        } catch (SQLException e) {
-            System.out.println("Error fetching users: " + e.getMessage());
         }
+        return users;
     }
 
-    // Add a file record to the database
-    public static boolean addFile(int userId, String fileName, String encryptedPath) {
+    public static boolean addFile(int userId, String fileName, String encryptedPath) throws SQLException {
         String sql = "INSERT INTO vault_files (user_id, file_name, encrypted_path) VALUES (?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -100,46 +114,80 @@ public class DatabaseManager {
             stmt.setString(2, fileName);
             stmt.setString(3, encryptedPath);
             stmt.executeUpdate();
-            System.out.println("File stored: " + fileName);
             return true;
-        } catch (SQLException e) {
-            System.out.println("Error storing file: " + e.getMessage());
-            return false;
         }
     }
 
-    // Get all files belonging to a user
-    public static void getFilesByUser(int userId) {
-        String sql = "SELECT file_id, file_name, encrypted_path, uploaded_at FROM vault_files WHERE user_id = ?";
+    public static List<VaultFile> getFilesByUser(int userId) throws SQLException {
+        List<VaultFile> files = new ArrayList<>();
+        String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.uploaded_at " +
+                "FROM vault_files vf JOIN users u ON u.user_id = vf.user_id " +
+                "WHERE vf.user_id = ? ORDER BY vf.uploaded_at DESC";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
-            System.out.println("\n===== YOUR FILES =====");
-            boolean hasFiles = false;
             while (rs.next()) {
-                hasFiles = true;
-                System.out.println("ID: " + rs.getInt("file_id") +
-                        " | Name: " + rs.getString("file_name") +
-                        " | Path: " + rs.getString("encrypted_path") +
-                        " | Uploaded: " + rs.getString("uploaded_at"));
+                files.add(mapVaultFile(rs));
             }
-            if (!hasFiles) {
-                System.out.println("No files found.");
+        }
+        return files;
+    }
+
+    public static List<VaultFile> getAllFiles() throws SQLException {
+        List<VaultFile> files = new ArrayList<>();
+        String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.uploaded_at " +
+                "FROM vault_files vf JOIN users u ON u.user_id = vf.user_id " +
+                "ORDER BY vf.uploaded_at DESC";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                files.add(mapVaultFile(rs));
             }
-            System.out.println("======================");
-        } catch (SQLException e) {
-            System.out.println("Error fetching files: " + e.getMessage());
+        }
+        return files;
+    }
+
+    public static void bootstrapAdminFromEnv() throws SQLException {
+        String bootstrap = System.getenv().getOrDefault("VAULTMIND_BOOTSTRAP_ADMIN", "false");
+        if (!"true".equalsIgnoreCase(bootstrap)) {
+            return;
+        }
+
+        String adminUsername = System.getenv().getOrDefault("VAULTMIND_ADMIN_USERNAME", "admin");
+        String adminPassword = System.getenv("VAULTMIND_ADMIN_PASSWORD");
+
+        if (adminPassword == null || adminPassword.isBlank()) {
+            throw new SQLException("VAULTMIND_ADMIN_PASSWORD must be set when VAULTMIND_BOOTSTRAP_ADMIN=true");
+        }
+
+        User existingUser = getUserByUsername(adminUsername);
+        if (existingUser == null) {
+            addUser(adminUsername, hashPassword(adminPassword), "admin");
         }
     }
 
-    public static void testConnection() {
-        try {
-            Connection conn = getConnection();
-            System.out.println("Connected to VaultMind database successfully!");
-            conn.close();
-        } catch (SQLException e) {
-            System.out.println("Connection failed: " + e.getMessage());
-        }
+    private static User mapUser(ResultSet rs) throws SQLException {
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        return new User(
+                rs.getInt("user_id"),
+                rs.getString("username"),
+                rs.getString("password_hash"),
+                rs.getString("role"),
+                createdAt == null ? "" : createdAt.toLocalDateTime().toString()
+        );
+    }
+
+    private static VaultFile mapVaultFile(ResultSet rs) throws SQLException {
+        Timestamp uploadedAt = rs.getTimestamp("uploaded_at");
+        return new VaultFile(
+                rs.getInt("file_id"),
+                rs.getInt("user_id"),
+                rs.getString("username"),
+                rs.getString("file_name"),
+                rs.getString("encrypted_path"),
+                uploadedAt == null ? "" : uploadedAt.toLocalDateTime().toString()
+        );
     }
 }
