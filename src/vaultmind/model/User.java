@@ -15,23 +15,9 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
+    public int getId() { return id; }
+    public String getUsername() { return username; }
+    public String getPasswordHash() { return passwordHash; }
+    public String getRole() { return role; }
+    public String getCreatedAt() { return createdAt; }
 }

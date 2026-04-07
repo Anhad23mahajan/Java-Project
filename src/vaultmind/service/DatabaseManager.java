@@ -106,13 +106,14 @@ public class DatabaseManager {
         return users;
     }
 
-    public static boolean addFile(int userId, String fileName, String encryptedPath) throws SQLException {
-        String sql = "INSERT INTO vault_files (user_id, file_name, encrypted_path) VALUES (?, ?, ?)";
+    public static boolean addFile(int userId, String fileName, String encryptedPath, byte[] fileContent) throws SQLException {
+        String sql = "INSERT INTO vault_files (user_id, file_name, encrypted_path, file_content) VALUES (?, ?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, fileName);
             stmt.setString(3, encryptedPath);
+            stmt.setBytes(4, fileContent);
             stmt.executeUpdate();
             return true;
         }
@@ -120,7 +121,7 @@ public class DatabaseManager {
 
     public static List<VaultFile> getFilesByUser(int userId) throws SQLException {
         List<VaultFile> files = new ArrayList<>();
-        String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.uploaded_at " +
+        String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.file_content, vf.uploaded_at " +
                 "FROM vault_files vf JOIN users u ON u.user_id = vf.user_id " +
                 "WHERE vf.user_id = ? ORDER BY vf.uploaded_at DESC";
         try (Connection conn = getConnection();
@@ -136,7 +137,7 @@ public class DatabaseManager {
 
     public static List<VaultFile> getAllFiles() throws SQLException {
         List<VaultFile> files = new ArrayList<>();
-        String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.uploaded_at " +
+        String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.file_content, vf.uploaded_at " +
                 "FROM vault_files vf JOIN users u ON u.user_id = vf.user_id " +
                 "ORDER BY vf.uploaded_at DESC";
         try (Connection conn = getConnection();
@@ -187,6 +188,7 @@ public class DatabaseManager {
                 rs.getString("username"),
                 rs.getString("file_name"),
                 rs.getString("encrypted_path"),
+                rs.getBytes("file_content"),
                 uploadedAt == null ? "" : uploadedAt.toLocalDateTime().toString()
         );
     }
