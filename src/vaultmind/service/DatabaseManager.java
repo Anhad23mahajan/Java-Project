@@ -119,6 +119,22 @@ public class DatabaseManager {
         }
     }
 
+    public static VaultFile getFileByIdForUser(int fileId, int userId) throws SQLException {
+        String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.file_content, vf.uploaded_at " +
+                "FROM vault_files vf JOIN users u ON u.user_id = vf.user_id " +
+                "WHERE vf.file_id = ? AND vf.user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, fileId);
+            stmt.setInt(2, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapVaultFile(rs);
+            }
+        }
+        return null;
+    }
+
     public static List<VaultFile> getFilesByUser(int userId) throws SQLException {
         List<VaultFile> files = new ArrayList<>();
         String sql = "SELECT vf.file_id, vf.user_id, u.username, vf.file_name, vf.encrypted_path, vf.file_content, vf.uploaded_at " +

@@ -7,12 +7,14 @@ import com.sun.net.httpserver.HttpServer;
 import vaultmind.model.User;
 import vaultmind.model.VaultFile;
 import vaultmind.service.DatabaseManager;
+import vaultmind.service.EncryptionService;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -22,6 +24,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main Web Server and Route Handler
@@ -55,6 +59,7 @@ public class WebServer {
         server.createContext("/register", wrap(this::handleRegister));
         server.createContext("/dashboard", wrap(this::handleDashboard));
         server.createContext("/files", wrap(this::handleFileCreate));
+        server.createContext("/files/view", wrap(this::handleFileView));
         server.createContext("/logout", wrap(this::handleLogout));
         server.createContext("/favicon.ico", exchange -> sendResponse(exchange, 204, "", "text/plain; charset=UTF-8"));
     }
@@ -211,6 +216,50 @@ public class WebServer {
         }
     }
 
+    private void handleFileView(HttpExchange exchange) throws IOException, SQLException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            methodNotAllowed(exchange);
+            return;
+        }
+
+        SessionManager.Session session = requireSession(exchange);
+        if (session == null) return;
+
+        if ("admin".equalsIgnoreCase(session.getRole())) {
+            sendResponse(exchange, 403, HtmlRenderer.renderErrorPage("Forbidden", "Admins cannot open decrypted user files."), "text/html; charset=UTF-8");
+            return;
+        }
+
+        Integer fileId = parsePositiveInt(readQueryParams(exchange).get("id"));
+        if (fileId == null) {
+            sendResponse(exchange, 400, HtmlRenderer.renderErrorPage("Bad Request", "A valid file id is required."), "text/html; charset=UTF-8");
+            return;
+        }
+
+        VaultFile file = DatabaseManager.getFileByIdForUser(fileId, session.getUserId());
+        if (file == null || file.getFileContent() == null) {
+            sendResponse(exchange, 404, HtmlRenderer.renderErrorPage("Not Found", "Encrypted file record was not found."), "text/html; charset=UTF-8");
+            return;
+        }
+
+        byte[] responseBytes = null;
+        try {
+            SessionManager.DecryptedFile decryptedFile = sessionManager.getOrCreateDecryptedFile(
+                    session,
+                    file,
+                    session.getUsername() + "vault-secret"
+            );
+            responseBytes = Arrays.copyOf(decryptedFile.getContent(), decryptedFile.getContent().length);
+            sendFileResponse(exchange, 200, responseBytes, decryptedFile.getContentType(), decryptedFile.getFileName());
+        } catch (Exception e) {
+            sendResponse(exchange, 500, HtmlRenderer.renderErrorPage("Decryption Error", e.getMessage()), "text/html; charset=UTF-8");
+        } finally {
+            if (responseBytes != null) {
+                Arrays.fill(responseBytes, (byte) 0);
+            }
+        }
+    }
+
     private void handleLogout(HttpExchange exchange) throws IOException {
         String token = getSessionToken(exchange);
         sessionManager.removeSession(token);
@@ -244,9 +293,18 @@ public class WebServer {
 
     private Map<String, String> readFormData(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        if (body.isBlank()) return Collections.emptyMap();
+        return parseUrlEncoded(body);
+    }
+
+    private Map<String, String> readQueryParams(HttpExchange exchange) {
+        return parseUrlEncoded(exchange.getRequestURI().getRawQuery());
+    }
+
+    private Map<String, String> parseUrlEncoded(String raw) {
+        if (raw == null || raw.isBlank()) return Collections.emptyMap();
         Map<String, String> values = new HashMap<>();
-        for (String pair : body.split("&")) {
+        for (String pair : raw.split("&")) {
+            if (pair.isBlank()) continue;
             String[] parts = pair.split("=", 2);
             String key = URLDecoder.decode(parts[0], StandardCharsets.UTF_8);
             String value = parts.length > 1 ? URLDecoder.decode(parts[1], StandardCharsets.UTF_8) : "";
@@ -255,7 +313,25 @@ public class WebServer {
         return values;
     }
 
+    private Integer parsePositiveInt(String value) {
+        try {
+            int parsed = Integer.parseInt(trimmed(value));
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private String trimmed(String v) { return v == null ? "" : v.trim(); }
+
+    private String safeFileName(String fileName) {
+        String sanitized = trimmed(fileName)
+                .replace("\\", "_")
+                .replace("\"", "'")
+                .replace("\r", "")
+                .replace("\n", "");
+        return sanitized.isBlank() ? "vault-file" : sanitized;
+    }
 
     private void redirect(HttpExchange exchange, String loc) throws IOException {
         exchange.getResponseHeaders().set("Location", loc);
@@ -274,6 +350,19 @@ public class WebServer {
         try (OutputStream os = exchange.getResponseBody()) { os.write(bytes); }
     }
 
+    private void sendFileResponse(HttpExchange exchange, int code, byte[] body, String contentType, String fileName) throws IOException {
+        Headers headers = exchange.getResponseHeaders();
+        headers.set("Content-Type", contentType);
+        headers.set("Content-Disposition", "inline; filename=\"" + safeFileName(fileName) + "\"");
+        headers.set("Cache-Control", "no-store, private, max-age=0");
+        headers.set("Pragma", "no-cache");
+        headers.set("X-Content-Type-Options", "nosniff");
+        exchange.sendResponseHeaders(code, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
+        }
+    }
+
     @FunctionalInterface
     private interface RouteHandler { void handle(HttpExchange e) throws Exception; }
 }
@@ -285,8 +374,18 @@ class SessionManager {
     private static final Duration SESSION_TTL = Duration.ofHours(8);
     private final SecureRandom secureRandom = new SecureRandom();
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService cleanupExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread thread = new Thread(r, "vaultmind-session-cleanup");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    public SessionManager() {
+        cleanupExecutor.scheduleAtFixedRate(this::purgeExpiredSessions, 1, 1, TimeUnit.MINUTES);
+    }
 
     public Session createSession(User user) {
+        purgeExpiredSessions();
         byte[] tokenBytes = new byte[32];
         secureRandom.nextBytes(tokenBytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
@@ -296,96 +395,105 @@ class SessionManager {
     }
 
     public Session getSession(String token) {
+        purgeExpiredSessions();
         Session s = token == null ? null : sessions.get(token);
-        if (s != null && s.lastSeen.plus(SESSION_TTL).isBefore(Instant.now())) {
-            sessions.remove(token);
-            return null;
-        }
         if (s != null) s.lastSeen = Instant.now();
         return s;
     }
 
-    public void removeSession(String t) { if (t != null) sessions.remove(t); }
+    public void removeSession(String t) {
+        if (t == null) return;
+        Session removed = sessions.remove(t);
+        if (removed != null) removed.clearSensitiveData();
+    }
+
+    public DecryptedFile getOrCreateDecryptedFile(Session session, VaultFile file, String secret) throws Exception {
+        DecryptedFile cached = session.decryptedFiles.get(file.getId());
+        if (cached != null) {
+            return cached;
+        }
+
+        if (file.getFileContent() == null) {
+            throw new IllegalStateException("No encrypted content is stored for this file.");
+        }
+
+        byte[] decryptedContent = EncryptionService.decrypt(file.getFileContent(), secret);
+        DecryptedFile created = new DecryptedFile(
+                file.getFileName(),
+                detectContentType(file.getFileName(), decryptedContent),
+                decryptedContent
+        );
+        DecryptedFile existing = session.decryptedFiles.putIfAbsent(file.getId(), created);
+        if (existing != null) {
+            created.destroy();
+            return existing;
+        }
+        return created;
+    }
+
+    private void purgeExpiredSessions() {
+        Instant now = Instant.now();
+        for (Map.Entry<String, Session> entry : sessions.entrySet()) {
+            Session session = entry.getValue();
+            if (session.isExpired(now) && sessions.remove(entry.getKey(), session)) {
+                session.clearSensitiveData();
+            }
+        }
+    }
+
+    private String detectContentType(String fileName, byte[] content) {
+        String detected = URLConnection.guessContentTypeFromName(fileName);
+        if (detected == null && content.length > 0) {
+            try (ByteArrayInputStream input = new ByteArrayInputStream(content)) {
+                detected = URLConnection.guessContentTypeFromStream(input);
+            } catch (IOException ignored) {
+                detected = null;
+            }
+        }
+        return detected == null ? "application/octet-stream" : detected;
+    }
 
     public static class Session {
         private final String token;
         private final int userId;
         private final String username;
         private final String role;
+        private final Map<Integer, DecryptedFile> decryptedFiles = new ConcurrentHashMap<>();
         private Instant lastSeen;
 
         private Session(String t, int id, String u, String r, Instant now) {
             this.token = t; this.userId = id; this.username = u; this.role = r; this.lastSeen = now;
+        }
+        private boolean isExpired(Instant now) { return lastSeen.plus(SESSION_TTL).isBefore(now); }
+        private void clearSensitiveData() {
+            for (DecryptedFile file : decryptedFiles.values()) {
+                file.destroy();
+            }
+            decryptedFiles.clear();
         }
         public String getToken() { return token; }
         public int getUserId() { return userId; }
         public String getUsername() { return username; }
         public String getRole() { return role; }
     }
-}
 
-/**
- * UI Rendering
- */
-class HtmlRenderer {
-    public static String renderLoginPage(String msg, boolean ok) {
-        String status = msg == null ? "" : "<div class=\"status " + (ok ? "success" : "error") + "\">" + esc(msg) + "</div>";
-        return layout("Login", "<div class=\"panel auth-panel\"><h1>VaultMind</h1>" + status + 
-            "<form method=\"post\" action=\"/login\" class=\"stack\">" +
-            "<label>User<input type=\"text\" name=\"username\" required></label>" +
-            "<label>Pass<input type=\"password\" name=\"password\" required></label>" +
-            "<button type=\"submit\">Log In</button></form><p><a href=\"/register\">Register</a></p></div>", null);
-    }
+    public static class DecryptedFile {
+        private final String fileName;
+        private final String contentType;
+        private final byte[] content;
 
-    public static String renderRegisterPage(String msg) {
-        String status = msg == null ? "" : "<div class=\"status error\">" + esc(msg) + "</div>";
-        return layout("Register", "<div class=\"panel auth-panel\"><h1>Register</h1>" + status + 
-            "<form method=\"post\" action=\"/register\" class=\"stack\">" +
-            "<label>User<input type=\"text\" name=\"username\" required></label>" +
-            "<label>Pass<input type=\"password\" name=\"password\" required></label>" +
-            "<button type=\"submit\">Join</button></form><p><a href=\"/login\">Back</a></p></div>", null);
-    }
-
-    public static String renderUserDashboard(SessionManager.Session s, List<VaultFile> files, String msg, boolean ok) {
-        StringBuilder rows = new StringBuilder();
-        for (VaultFile f : files) {
-            String info = f.getFileContent() != null ? "In DB (" + f.getFileContent().length + "B)" : f.getEncryptedPath();
-            rows.append("<tr><td>").append(esc(f.getFileName())).append("</td><td><code>").append(esc(info)).append("</code></td><td>").append(esc(f.getUploadedAt())).append("</td></tr>");
+        private DecryptedFile(String fileName, String contentType, byte[] content) {
+            this.fileName = fileName;
+            this.contentType = contentType;
+            this.content = content;
         }
-        return layout("Dashboard", header(s, "Dashboard") + "<div class=\"grid\"><div class=\"panel\"><h2>Upload</h2>" +
-            (msg != null ? "<div class=\"status " + (ok ? "success" : "error") + "\">" + esc(msg) + "</div>" : "") +
-            "<form method=\"post\" action=\"/files\" enctype=\"multipart/form-data\" class=\"stack\"><input type=\"file\" name=\"file\" required><button type=\"submit\">Upload</button></form></div>" +
-            "<div class=\"panel wide\"><h2>My Files</h2><table><thead><tr><th>File</th><th>Info</th><th>Date</th></tr></thead><tbody>" + 
-            (rows.length() == 0 ? "<tr><td colspan=\"3\">Empty</td></tr>" : rows) + "</tbody></table></div></div>", s);
-    }
 
-    public static String renderAdminDashboard(SessionManager.Session s, List<User> users, List<VaultFile> files) {
-        StringBuilder uRows = new StringBuilder(), fRows = new StringBuilder();
-        for (User u : users) uRows.append("<tr><td>").append(u.getId()).append("</td><td>").append(esc(u.getUsername())).append("</td><td>").append(esc(u.getRole())).append("</td></tr>");
-        for (VaultFile f : files) fRows.append("<tr><td>").append(esc(f.getOwnerUsername())).append("</td><td>").append(esc(f.getFileName())).append("</td><td>").append(esc(f.getUploadedAt())).append("</td></tr>");
-        return layout("Admin", header(s, "Admin") + "<div class=\"grid\"><div class=\"panel wide\"><h2>Users</h2><table><thead><tr><th>ID</th><th>User</th><th>Role</th></tr></thead><tbody>" + uRows + "</tbody></table></div>" +
-            "<div class=\"panel wide\"><h2>All Files</h2><table><thead><tr><th>Owner</th><th>File</th><th>Date</th></tr></thead><tbody>" + fRows + "</tbody></table></div></div>", s);
-    }
+        private void destroy() {
+            Arrays.fill(content, (byte) 0);
+        }
 
-    public static String renderErrorPage(String t, String m) {
-        return layout(t, "<div class=\"panel auth-panel\"><h1>" + esc(t) + "</h1><p>" + esc(m) + "</p><a href=\"/\">Home</a></div>", null);
+        public String getFileName() { return fileName; }
+        public String getContentType() { return contentType; }
+        public byte[] getContent() { return content; }
     }
-
-    private static String header(SessionManager.Session s, String t) {
-        return "<header class=\"app-header\"><div><span>" + esc(s.getUsername()) + " (" + esc(s.getRole()) + ")</span><h1>" + esc(t) + "</h1></div><a class=\"ghost-button\" href=\"/logout\">Log Out</a></header>";
-    }
-
-    private static String layout(String t, String b, SessionManager.Session s) {
-        return "<!DOCTYPE html><html><head><title>" + esc(t) + "</title><style>" +
-            ":root{--bg:#f5efe5;--ink:#1f2a2e;--panel:#fffaf3;--line:#d9c8b2;--accent:#b5522e;--muted:#6d6258;--ok:#1f7a52;--error:#9f2f2f;}" +
-            "body{margin:0;font-family:sans-serif;background:var(--bg);color:var(--ink);}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:20px;}" +
-            ".grid{display:grid;grid-template-columns:1fr 2fr;gap:20px;width:min(1000px,95%);margin:0 auto;}.wide{grid-column:1/-1;}.stack{display:grid;gap:10px;}" +
-            "button,.ghost-button{padding:10px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;}" +
-            "input{padding:10px;border:1px solid var(--line);border-radius:8px;}table{width:100%;border-collapse:collapse;}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;}" +
-            ".status{padding:10px;border-radius:8px;margin-bottom:10px;font-weight:bold;}.success{background:#dcfce7;color:var(--ok);}.error{background:#fee2e2;color:var(--error);}" +
-            ".app-header{width:min(1000px,95%);margin:0 auto;padding:20px 0;display:flex;justify-content:space-between;align-items:center;}" +
-            ".auth-panel{max-width:400px;margin:100px auto;text-align:center;}</style></head><body>" + (s==null?b:"<main>"+b+"</main>") + "</body></html>";
-    }
-
-    private static String esc(String v) { return v==null?"":v.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;"); }
 }

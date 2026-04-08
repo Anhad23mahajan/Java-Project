@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultMind | Admin</title>
+    <style>
+        :root {
+            --bg: #ece3d6;
+            --panel: rgba(255, 248, 238, 0.94);
+            --line: rgba(43, 31, 24, 0.12);
+            --ink: #221a15;
+            --muted: #6a6055;
+            --accent: #b14f28;
+            --accent-dark: #7f3114;
+            --accent-soft: rgba(177, 79, 40, 0.14);
+            --shadow: 0 30px 80px rgba(35, 24, 19, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top right, rgba(177, 79, 40, 0.16), transparent 28%),
+                radial-gradient(circle at bottom left, rgba(32, 25, 20, 0.12), transparent 24%),
+                linear-gradient(180deg, #f4ede2 0%, #eee3d2 52%, #f7f2e8 100%);
+        }
+
+        .shell {
+            width: min(1240px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 42px;
+        }
+
+        .masthead {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: center;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-mark {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: #fffaf3;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1.7rem;
+            box-shadow: 0 18px 35px rgba(127, 49, 20, 0.28);
+        }
+
+        .brand-copy small {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .brand-copy h1 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2.1rem, 4vw, 3.6rem);
+            letter-spacing: -0.04em;
+        }
+
+        .brand-copy p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .admin-chip {
+            padding: 16px 18px;
+            border-radius: 22px;
+            background: rgba(255, 248, 238, 0.78);
+            border: 1px solid rgba(43, 31, 24, 0.1);
+            box-shadow: var(--shadow);
+            text-align: right;
+        }
+
+        .admin-chip strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .admin-chip span {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .logout {
+            display: inline-flex;
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            color: var(--accent-dark);
+            background: var(--accent-soft);
+            font-weight: 700;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            padding: 22px;
+            border-radius: 26px;
+            background: var(--panel);
+            border: 1px solid rgba(43, 31, 24, 0.1);
+            box-shadow: var(--shadow);
+        }
+
+        .stat span {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .stat strong {
+            display: block;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(1.7rem, 3vw, 2.4rem);
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .stat p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .panels {
+            display: grid;
+            gap: 18px;
+        }
+
+        .panel {
+            padding: 24px;
+            border-radius: 28px;
+            background: var(--panel);
+            border: 1px solid rgba(43, 31, 24, 0.1);
+            box-shadow: var(--shadow);
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: end;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .panel-head h2 {
+            margin: 0 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1.8rem;
+            letter-spacing: -0.03em;
+        }
+
+        .panel-head p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+            max-width: 54ch;
+        }
+
+        .search {
+            min-width: min(320px, 100%);
+        }
+
+        .search input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.84);
+            font: inherit;
+        }
+
+        .search input:focus {
+            outline: none;
+            border-color: rgba(177, 79, 40, 0.55);
+            box-shadow: 0 0 0 5px rgba(177, 79, 40, 0.1);
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border-radius: 22px;
+            border: 1px solid rgba(43, 31, 24, 0.08);
+            background: rgba(255, 255, 255, 0.66);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        th,
+        td {
+            padding: 16px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(43, 31, 24, 0.08);
+            vertical-align: top;
+        }
+
+        th {
+            background: rgba(255, 248, 238, 0.9);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .table-primary {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .table-secondary {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .pill {
+            display: inline-flex;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(43, 31, 24, 0.07);
+            color: var(--ink);
+            font-size: 0.92rem;
+        }
+
+        .pill-strong {
+            background: rgba(177, 79, 40, 0.16);
+            color: var(--accent-dark);
+        }
+
+        .pill-soft {
+            background: rgba(43, 31, 24, 0.08);
+        }
+
+        .empty-row td {
+            text-align: center;
+            color: var(--muted);
+            padding: 26px 18px;
+        }
+
+        .hidden-row {
+            display: none;
+        }
+
+        @media (max-width: 980px) {
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .admin-chip {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <header class="masthead">
+        <div class="brand">
+            <div class="brand-mark">V</div>
+            <div class="brand-copy">
+                <small>VaultMind admin view</small>
+                <h1>Oversight for the local vault</h1>
+                <p>Inspect users, review stored file records, and monitor encrypted storage activity without exposing decrypted user content.</p>
+            </div>
+        </div>
+        <div class="admin-chip">
+            <strong>{{username}}</strong>
+            <span>{{role}} session</span>
+            <div><a class="logout" href="/logout">Log Out</a></div>
+        </div>
+    </header>
+
+    <section class="stats">
+        <article class="stat">
+            <span>Total users</span>
+            <strong>{{user_count}}</strong>
+            <p>Registered accounts currently present in the vault database.</p>
+        </article>
+        <article class="stat">
+            <span>Admin accounts</span>
+            <strong>{{admin_count}}</strong>
+            <p>Users with admin privileges and access to this oversight dashboard.</p>
+        </article>
+        <article class="stat">
+            <span>Stored files</span>
+            <strong>{{file_count}}</strong>
+            <p>Total encrypted file records across all users.</p>
+        </article>
+        <article class="stat">
+            <span>Encrypted volume</span>
+            <strong>{{encrypted_total}}</strong>
+            <p>Approximate total size of encrypted blobs stored in PostgreSQL.</p>
+        </article>
+    </section>
+
+    <section class="panels">
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>User directory</h2>
+                    <p>Quickly filter accounts by id, username, role, or creation timestamp.</p>
+                </div>
+                <label class="search">
+                    <input data-user-filter type="search" placeholder="Filter users">
+                </label>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Created</th>
+                    </tr>
+                    </thead>
+                    <tbody data-user-body>
+                    <tr class="empty-row hidden-row" data-user-empty>
+                        <td colspan="4">No users match the current filter.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Encrypted file registry</h2>
+                    <p>Filter stored file records by owner, filename, encrypted size, or upload timestamp.</p>
+                </div>
+                <label class="search">
+                    <input data-file-filter type="search" placeholder="Filter files">
+                </label>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Owner</th>
+                        <th>File</th>
+                        <th>Encrypted size</th>
+                        <th>Uploaded</th>
+                    </tr>
+                    </thead>
+                    <tbody data-file-body>
+                    <tr class="empty-row hidden-row" data-file-empty>
+                        <td colspan="4">No files match the current filter.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </section>
+</main>
+<script type="application/json" id="admin-users-data">{{users_json}}</script>
+<script type="application/json" id="admin-files-data">{{files_json}}</script>
+<script>
+    (() => {
+        const userData = JSON.parse(document.getElementById("admin-users-data")?.textContent || "[]");
+        const fileData = JSON.parse(document.getElementById("admin-files-data")?.textContent || "[]");
+        const userBody = document.querySelector("[data-user-body]");
+        const fileBody = document.querySelector("[data-file-body]");
+        const userEmpty = document.querySelector("[data-user-empty]");
+        const fileEmpty = document.querySelector("[data-file-empty]");
+
+        const createCell = (content) => {
+            const cell = document.createElement("td");
+            if (content instanceof Node) {
+                cell.appendChild(content);
+            } else {
+                cell.textContent = content;
+            }
+            return cell;
+        };
+
+        const renderUsers = () => {
+            if (!userBody) return [];
+
+            if (userData.length === 0) {
+                const row = document.createElement("tr");
+                row.className = "empty-row";
+                const cell = document.createElement("td");
+                cell.colSpan = 4;
+                cell.textContent = "No users found.";
+                row.appendChild(cell);
+                userBody.insertBefore(row, userEmpty);
+                return [];
+            }
+
+            return userData.map((user) => {
+                const row = document.createElement("tr");
+                row.dataset.userRow = "true";
+
+                const userWrap = document.createElement("div");
+                const primary = document.createElement("div");
+                primary.className = "table-primary";
+                primary.textContent = user.username;
+                const secondary = document.createElement("div");
+                secondary.className = "table-secondary";
+                secondary.textContent = `Created ${user.created}`;
+                userWrap.append(primary, secondary);
+
+                const pill = document.createElement("span");
+                pill.className = `pill ${user.roleType.toLowerCase() === "admin" ? "pill-strong" : "pill-soft"}`;
+                pill.textContent = user.role;
+
+                row.append(
+                    createCell(`#${user.id}`),
+                    createCell(userWrap),
+                    createCell(pill),
+                    createCell(user.created)
+                );
+
+                userBody.insertBefore(row, userEmpty);
+                return row;
+            });
+        };
+
+        const renderFiles = () => {
+            if (!fileBody) return [];
+
+            if (fileData.length === 0) {
+                const row = document.createElement("tr");
+                row.className = "empty-row";
+                const cell = document.createElement("td");
+                cell.colSpan = 4;
+                cell.textContent = "No files stored yet.";
+                row.appendChild(cell);
+                fileBody.insertBefore(row, fileEmpty);
+                return [];
+            }
+
+            return fileData.map((file) => {
+                const row = document.createElement("tr");
+                row.dataset.fileRow = "true";
+
+                const ownerWrap = document.createElement("div");
+                const primary = document.createElement("div");
+                primary.className = "table-primary";
+                primary.textContent = file.owner;
+                const secondary = document.createElement("div");
+                secondary.className = "table-secondary";
+                secondary.textContent = `User ID ${file.userId}`;
+                ownerWrap.append(primary, secondary);
+
+                const pill = document.createElement("span");
+                pill.className = "pill";
+                pill.textContent = file.size;
+
+                row.append(
+                    createCell(ownerWrap),
+                    createCell(file.name),
+                    createCell(pill),
+                    createCell(file.uploaded)
+                );
+
+                fileBody.insertBefore(row, fileEmpty);
+                return row;
+            });
+        };
+
+        const userRows = renderUsers();
+        const fileRows = renderFiles();
+
+        const bindFilter = (inputSelector, rowSelector, emptySelector) => {
+            const input = document.querySelector(inputSelector);
+            const rows = rowSelector;
+            const empty = emptySelector;
+
+            if (!input || rows.length === 0 || !empty) {
+                return;
+            }
+
+            input.addEventListener("input", () => {
+                const query = input.value.trim().toLowerCase();
+                let visible = 0;
+
+                rows.forEach((row) => {
+                    const match = row.textContent.toLowerCase().includes(query);
+                    row.hidden = !match;
+                    if (match) visible += 1;
+                });
+
+                empty.classList.toggle("hidden-row", visible !== 0);
+            });
+        };
+
+        bindFilter("[data-user-filter]", userRows, userEmpty);
+        bindFilter("[data-file-filter]", fileRows, fileEmpty);
+    })();
+</script>
+</body>
+</html>

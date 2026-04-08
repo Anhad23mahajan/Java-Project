@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultMind | Error</title>
+    <style>
+        :root {
+            --bg: #f2eadf;
+            --panel: rgba(255, 248, 240, 0.94);
+            --ink: #221a15;
+            --muted: #6a6055;
+            --accent: #b24b29;
+            --line: rgba(43, 31, 24, 0.1);
+            --shadow: 0 28px 70px rgba(35, 24, 19, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(178, 75, 41, 0.16), transparent 32%),
+                linear-gradient(180deg, #f7f0e5 0%, #efe4d3 100%);
+            color: var(--ink);
+            font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+        }
+
+        .card {
+            width: min(640px, 100%);
+            padding: clamp(28px, 4vw, 44px);
+            border-radius: 30px;
+            background: var(--panel);
+            border: 1px solid rgba(43, 31, 24, 0.1);
+            box-shadow: var(--shadow);
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 12px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 0.78rem;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2.2rem, 4vw, 3.2rem);
+            letter-spacing: -0.04em;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .primary {
+            background: linear-gradient(135deg, var(--accent), #863317);
+            color: #fff8f3;
+        }
+
+        .ghost {
+            border: 1px solid var(--line);
+            color: var(--ink);
+            background: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+<main class="card">
+    <span class="eyebrow">VaultMind notice</span>
+    <h1>{{title}}</h1>
+    <p>{{message}}</p>
+    <div class="actions">
+        <a class="primary" href="/">Return Home</a>
+        <a class="ghost" href="/login">Go to Login</a>
+    </div>
+</main>
+</body>
+</html>

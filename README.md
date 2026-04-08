@@ -6,9 +6,16 @@ VaultMind is a localhost-only Java web app prototype for a private document vaul
 - register and log in users through the browser
 - keep separate admin and normal-user dashboards
 - store file metadata in a vault database
+- let signed-in users open decrypted versions of their own files
 - let admins view users and stored file records
 
-The encrypted file workflow and local AI document chat described in the problem statement are not implemented yet.
+Decrypted file content is kept in memory only for the active session and is cleared on logout or session expiry.
+
+The local AI document chat described in the problem statement is not implemented yet.
+
+## Frontend templates
+The UI is now rendered from HTML template files in `src/vaultmind/web/templates`.
+Each page keeps its HTML, CSS, and any page-specific JavaScript inside a `.html` file instead of embedding frontend markup in Java source.
 
 ## PostgreSQL setup
 Create a PostgreSQL database named `vaultmind`, then run the schema in `database/schema_postgresql.sql`.

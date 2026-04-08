@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultMind | Register</title>
+    <style>
+        :root {
+            --bg: #ede7dc;
+            --panel: rgba(255, 248, 239, 0.92);
+            --line: rgba(43, 31, 24, 0.14);
+            --ink: #201914;
+            --muted: #6a6056;
+            --accent: #aa4f2a;
+            --accent-dark: #7f3114;
+            --accent-soft: rgba(170, 79, 42, 0.12);
+            --success: #1d7c5b;
+            --error: #b24434;
+            --shadow: 0 36px 84px rgba(39, 28, 20, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 18% 16%, rgba(170, 79, 42, 0.16), transparent 30%),
+                radial-gradient(circle at 84% 24%, rgba(31, 24, 18, 0.12), transparent 26%),
+                linear-gradient(160deg, #f7efe2 0%, #efe3d1 50%, #f4eee6 100%);
+        }
+
+        .shell {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+        }
+
+        .panel-side {
+            display: grid;
+            place-items: center;
+            padding: 28px;
+        }
+
+        .card {
+            width: min(500px, 100%);
+            padding: clamp(28px, 4vw, 44px);
+            border-radius: 30px;
+            background: var(--panel);
+            border: 1px solid rgba(43, 31, 24, 0.1);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 12px;
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        h1 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2.4rem, 4vw, 3.3rem);
+            letter-spacing: -0.03em;
+        }
+
+        .copy {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .status {
+            margin: 22px 0 18px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            font-size: 0.96rem;
+            line-height: 1.5;
+            border: 1px solid transparent;
+        }
+
+        .status.success {
+            background: rgba(29, 124, 91, 0.12);
+            color: var(--success);
+            border-color: rgba(29, 124, 91, 0.18);
+        }
+
+        .status.error {
+            background: rgba(178, 68, 52, 0.1);
+            color: var(--error);
+            border-color: rgba(178, 68, 52, 0.18);
+        }
+
+        .status:empty {
+            display: none;
+        }
+
+        .stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field span {
+            font-size: 0.84rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .field input {
+            width: 100%;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.84);
+            font: inherit;
+            color: var(--ink);
+            transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: rgba(170, 79, 42, 0.55);
+            box-shadow: 0 0 0 5px rgba(170, 79, 42, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .field small {
+            color: var(--muted);
+            font-size: 0.86rem;
+        }
+
+        .submit {
+            margin-top: 8px;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: #fff9f2;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 18px 38px rgba(127, 49, 20, 0.26);
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 24px 48px rgba(127, 49, 20, 0.32);
+        }
+
+        .login-link {
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
+        }
+
+        .login-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .showcase {
+            padding: clamp(32px, 6vw, 80px);
+            display: grid;
+            align-content: center;
+            gap: 20px;
+        }
+
+        .mark {
+            width: 72px;
+            height: 72px;
+            display: grid;
+            place-items: center;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #2d2018, #523628);
+            color: #fff8f2;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .showcase h2 {
+            margin: 0;
+            max-width: 10ch;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(3rem, 6vw, 5rem);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+        }
+
+        .showcase p {
+            margin: 0;
+            max-width: 60ch;
+            color: var(--muted);
+            line-height: 1.8;
+            font-size: 1.04rem;
+        }
+
+        .rail {
+            display: grid;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .rail-card {
+            padding: 18px 20px;
+            border-radius: 22px;
+            background: rgba(255, 248, 239, 0.72);
+            border: 1px solid rgba(43, 31, 24, 0.1);
+            box-shadow: var(--shadow);
+        }
+
+        .rail-card strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.82rem;
+        }
+
+        .rail-card span {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 980px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .showcase {
+                padding-bottom: 0;
+            }
+
+            .panel-side {
+                padding-top: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <section class="panel-side">
+        <section class="card">
+            <span class="eyebrow">Create Access</span>
+            <h1>Start your private vault.</h1>
+            <p class="copy">Register a local account to upload encrypted files and open decrypted previews during the active session only.</p>
+            <div class="status {{status_class}}">{{status_message}}</div>
+            <form method="post" action="/register" class="stack">
+                <label class="field">
+                    <span>Username</span>
+                    <input type="text" name="username" autocomplete="username" minlength="3" required>
+                    <small>Use at least 3 characters.</small>
+                </label>
+                <label class="field">
+                    <span>Password</span>
+                    <input type="password" name="password" autocomplete="new-password" minlength="6" required>
+                    <small>Use at least 6 characters.</small>
+                </label>
+                <button class="submit" type="submit">Create Account</button>
+            </form>
+            <div class="login-link">
+                <span>Already registered?</span>
+                <a href="/login">Back to login</a>
+            </div>
+        </section>
+    </section>
+    <section class="showcase">
+        <div class="mark">V</div>
+        <div>
+            <h2>Offline-first by design.</h2>
+            <p>
+                VaultMind focuses on straightforward local workflows: browser login, encrypted database storage, and role-aware dashboards without pushing your documents to a remote service.
+            </p>
+        </div>
+        <div class="rail">
+            <article class="rail-card">
+                <strong>Encrypted uploads</strong>
+                <span>Each uploaded file is encrypted before it is committed to the vault database.</span>
+            </article>
+            <article class="rail-card">
+                <strong>Session previews</strong>
+                <span>Decrypted file views are memory-only and are cleared when the session ends.</span>
+            </article>
+            <article class="rail-card">
+                <strong>Admin separation</strong>
+                <span>Admins can review platform records while normal users remain scoped to their own vault files.</span>
+            </article>
+        </div>
+    </section>
+</main>
+<script>
+    (() => {
+        const password = document.querySelector('input[name="password"]');
+        if (!password) return;
+
+        password.addEventListener("input", () => {
+            password.style.letterSpacing = password.value.length > 0 ? "0.08em" : "normal";
+        });
+    })();
+</script>
+</body>
+</html>
