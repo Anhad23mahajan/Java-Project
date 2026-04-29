@@ -3,7 +3,9 @@ package com.localai;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.net.httpserver.HttpExchange;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -44,6 +46,18 @@ final class DB {
 
     static void init() throws SQLException {
         connection();
+        seedAdmin();
+    }
+
+    private static void seedAdmin() throws SQLException {
+        if (!exists("SELECT 1 FROM users WHERE role = 'admin'")) {
+            update(
+                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                "admin",
+                BCrypt.withDefaults().hashToString(12, "admin".toCharArray()),
+                "admin"
+            );
+        }
     }
 
     static int update(String sql, Object... params) throws SQLException {
@@ -160,6 +174,17 @@ final class Auth {
         return new Session((int) id, cleanUsername, role);
     }
 
+    static void updateAdmin(int userId, String username, String password) throws SQLException {
+        String cleanUsername = require(username, 3, "Username");
+        String cleanPassword = require(password, 6, "Password");
+        DB.update(
+            "UPDATE users SET username = ?, password_hash = ? WHERE id = ?",
+            cleanUsername,
+            BCrypt.withDefaults().hashToString(12, cleanPassword.toCharArray()),
+            userId
+        );
+    }
+
     private static String require(String value, int minLength, String name) {
         String clean = value == null ? "" : value.trim();
         if (clean.length() < minLength) {
@@ -177,48 +202,53 @@ final class Auth {
 
 final class Sessions {
     private static final Map<String, Auth.Session> ACTIVE = new ConcurrentHashMap<>();
-    private static final String COOKIE = "LOCALAI_SESSION";
+    private static final String COOKIE_NAME = "LOCALAI_SESSION";
 
     private Sessions() {
     }
 
-    static void start(HttpExchange exchange, Auth.Session session) {
+    static void start(HttpServletResponse response, Auth.Session session) {
         String token = UUID.randomUUID().toString();
         ACTIVE.put(token, session);
-        exchange.getResponseHeaders().add("Set-Cookie", COOKIE + "=" + token + "; Path=/; HttpOnly; SameSite=Strict");
+        Cookie cookie = new Cookie(COOKIE_NAME, token);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // Set to true if using HTTPS
+        response.addCookie(cookie);
     }
 
-    static void end(HttpExchange exchange) {
-        String token = token(exchange);
+    static void end(HttpServletRequest request, HttpServletResponse response) {
+        String token = token(request);
         if (token != null) {
             ACTIVE.remove(token);
         }
-        exchange.getResponseHeaders().add("Set-Cookie", COOKIE + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict");
+        Cookie cookie = new Cookie(COOKIE_NAME, "");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
     }
 
-    static Auth.Session current(HttpExchange exchange) {
-        String token = token(exchange);
+    static Auth.Session current(HttpServletRequest request) {
+        String token = token(request);
         return token == null ? null : ACTIVE.get(token);
     }
 
-    static Auth.Session require(HttpExchange exchange) {
-        Auth.Session session = current(exchange);
+    static Auth.Session require(HttpServletRequest request) {
+        Auth.Session session = current(request);
         if (session == null) {
             throw new ApiException(401, "Not logged in.");
         }
         return session;
     }
 
-    private static String token(HttpExchange exchange) {
-        String cookieHeader = exchange.getRequestHeaders().getFirst("Cookie");
-        if (cookieHeader == null || cookieHeader.isBlank()) {
-            return null;
-        }
-
-        for (String item : cookieHeader.split(";")) {
-            String[] parts = item.trim().split("=", 2);
-            if (parts.length == 2 && COOKIE.equals(parts[0])) {
-                return parts[1];
+    private static String token(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (COOKIE_NAME.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
             }
         }
         return null;
@@ -245,17 +275,39 @@ final class AppData {
         );
     }
 
-    static List<String> adminDocuments() throws SQLException {
+    static List<AdminDocument> adminDocuments() throws SQLException {
         return DB.queryAll(
             """
-            SELECT u.username, d.filename, d.uploaded_at
+            SELECT u.username, d.id, d.filename, d.uploaded_at
             FROM documents d
             JOIN users u ON u.id = d.user_id
-            ORDER BY u.username ASC, d.uploaded_at DESC
+            ORDER BY d.uploaded_at DESC
             """,
-            rs -> rs.getString("username") + " | " + rs.getString("filename") + " | " + rs.getTimestamp("uploaded_at")
+            rs -> new AdminDocument(rs.getInt("id"), rs.getString("username"), rs.getString("filename"), rs.getTimestamp("uploaded_at").toString())
         );
     }
+
+    static List<AdminUser> adminUsers() throws SQLException {
+        return DB.queryAll(
+            "SELECT id, username, role FROM users ORDER BY id ASC",
+            rs -> new AdminUser(rs.getInt("id"), rs.getString("username"), rs.getString("role"))
+        );
+    }
+
+    static JsonObject adminStats() throws SQLException {
+        JsonObject stats = new JsonObject();
+        stats.addProperty("totalUsers", DB.<Integer>queryOne("SELECT count(*) FROM users", rs -> rs.getInt(1)));
+        stats.addProperty("totalDocuments", DB.<Integer>queryOne("SELECT count(*) FROM documents", rs -> rs.getInt(1)));
+        stats.addProperty("totalMessages", DB.<Integer>queryOne("SELECT count(*) FROM chat_messages", rs -> rs.getInt(1)));
+        return stats;
+    }
+
+    static void deleteDocumentGlobal(int docId) throws SQLException {
+        DB.update("DELETE FROM documents WHERE id = ?", docId);
+    }
+
+    record AdminDocument(int id, String username, String filename, String uploadedAt) {}
+    record AdminUser(int id, String username, String role) {}
 
     static void saveDocument(int userId, String filename, byte[] bytes) throws Exception {
         String content = FileUtil.readDocument(filename, bytes);
