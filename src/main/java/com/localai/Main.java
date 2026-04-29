@@ -3,7 +3,6 @@ package com.localai;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.SpringApplication;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 
 @SpringBootApplication
 @RestController
@@ -70,6 +68,18 @@ public class Main {
         JsonObject json = stateJson(session);
         json.addProperty("reply", reply);
         return json.toString();
+    }
+
+    @PostMapping("/api/password")
+    public String changePassword(@RequestBody String body, HttpServletRequest request) throws Exception {
+        Auth.Session session = Sessions.require(request);
+        JsonObject jsonBody = JsonParser.parseString(body).getAsJsonObject();
+        Auth.changePassword(
+            session.id(),
+            required(jsonBody, "currentPassword"),
+            required(jsonBody, "newPassword")
+        );
+        return stateJson(session).toString();
     }
 
     @PostMapping("/api/admin/update")

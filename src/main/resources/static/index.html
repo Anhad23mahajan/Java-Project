@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local AI | Secure Chat</title>
+    <title>VaultMind | Workspace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #cf5c36; /* Terracotta */
-            --primary-dark: #b34a29;
-            --accent: #9d4d3f; /* Burnt Orange */
-            --bg: #f5f2eb; /* Warm Cream */
-            --card-bg: rgba(255, 255, 255, 0.65);
-            --border: rgba(207, 92, 54, 0.15);
-            --text: #2c2420; /* Deep Charcoal/Brown */
-            --text-muted: #7a6e67;
-            --success: #6b8e23;
-            --error: #a33b20;
-            --sidebar-width: 340px;
-            --glass-blur: 10px;
+            --primary: #bf5a36;
+            --primary-dark: #94401f;
+            --accent: #234646;
+            --bg: #f4efe6;
+            --bg-strong: #ece2d0;
+            --card-bg: rgba(255, 250, 244, 0.78);
+            --card-bg-strong: rgba(255, 255, 255, 0.88);
+            --border: rgba(82, 55, 36, 0.12);
+            --text: #281d18;
+            --text-muted: #75645d;
+            --success: #477a58;
+            --error: #9e3a22;
+            --sidebar-width: 280px;
+            --glass-blur: 14px;
+            --shadow: 0 28px 70px -28px rgba(38, 23, 16, 0.28);
         }
 
         * {
@@ -30,47 +33,44 @@
         }
 
         body {
-            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-            background-color: var(--bg);
+            font-family: 'Manrope', sans-serif;
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 10% 10%, rgba(207, 92, 54, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(157, 77, 63, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at top left, rgba(191, 90, 54, 0.16) 0%, transparent 30%),
+                radial-gradient(circle at bottom right, rgba(35, 70, 70, 0.14) 0%, transparent 28%),
+                linear-gradient(135deg, rgba(255,255,255,0.78), rgba(244,239,230,0.92)),
                 url("https://www.transparenttextures.com/patterns/cream-paper.png");
         }
 
         h1, h2, h3, h4 {
-            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-family: 'Fraunces', serif;
             font-weight: 700;
         }
 
-        /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideIn {
-            from { transform: translateX(-30px); opacity: 0; }
+            from { transform: translateX(-24px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
 
-        .animate-fade { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .animate-slide { animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade { animation: fadeIn 0.45s ease forwards; }
+        .animate-slide { animation: slideIn 0.5s ease forwards; }
 
-        /* Layout */
         .container {
-            max-width: 1400px;
+            max-width: 1440px;
             margin: 0 auto;
-            padding: 2.5rem;
+            padding: 2rem;
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* Auth Screen */
         #auth {
             display: flex;
             align-items: center;
@@ -83,134 +83,139 @@
             backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--border);
             border-radius: 32px;
-            padding: 4rem 3rem;
+            padding: 3.2rem 2.8rem;
             width: 100%;
             max-width: 500px;
-            box-shadow: 0 20px 60px -15px rgba(44, 36, 32, 0.1);
+            box-shadow: var(--shadow);
         }
 
         .auth-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2.4rem;
         }
 
         .auth-header h1 {
             font-size: 2.8rem;
             color: var(--primary);
-            letter-spacing: -0.02em;
-            margin-bottom: 0.75rem;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.7rem;
         }
 
         .auth-header p {
             color: var(--text-muted);
-            font-size: 1rem;
-            font-style: italic;
+            font-size: 0.98rem;
         }
 
         .form-group {
-            margin-bottom: 1.75rem;
+            margin-bottom: 1.2rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.6rem;
-            font-size: 0.85rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
         }
 
         input, textarea {
             width: 100%;
-            padding: 1rem 1.25rem;
-            background: rgba(255, 255, 255, 0.5);
+            padding: 1rem 1.1rem;
+            background: rgba(255, 255, 255, 0.62);
             border: 1px solid var(--border);
             border-radius: 16px;
             color: var(--text);
             font-size: 1rem;
             transition: all 0.3s ease;
+            font-family: inherit;
         }
 
         input:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.8);
-            box-shadow: 0 0 0 4px rgba(207, 92, 54, 0.08);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 0 0 4px rgba(191, 90, 54, 0.08);
         }
 
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem 1.75rem;
+            padding: 0.95rem 1.45rem;
             border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.25s ease;
             border: none;
-            font-size: 1rem;
-            gap: 0.6rem;
+            font-size: 0.98rem;
+            gap: 0.55rem;
+            font-family: inherit;
         }
 
         .btn-primary {
             background: var(--primary);
             color: white;
             width: 100%;
-            box-shadow: 0 4px 12px rgba(207, 92, 54, 0.2);
+            box-shadow: 0 14px 32px -18px rgba(191, 90, 54, 0.85);
         }
 
         .btn-primary:hover {
             background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(207, 92, 54, 0.3);
+            box-shadow: 0 18px 34px -18px rgba(148, 64, 31, 0.8);
         }
 
         .btn-secondary {
-            background: rgba(44, 36, 32, 0.05);
+            background: rgba(40, 29, 24, 0.06);
             color: var(--text);
             border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: rgba(44, 36, 32, 0.08);
+            background: rgba(40, 29, 24, 0.09);
             transform: translateY(-1px);
         }
 
         .btn-danger {
             background: var(--error);
             color: white;
-            padding: 0.5rem 1rem;
+            padding: 0.58rem 0.9rem;
             font-size: 0.85rem;
+            width: auto;
         }
 
         .btn-danger:hover {
-            background: #8e2f18;
+            background: #842f1b;
             transform: translateY(-1px);
         }
 
         .auth-footer {
-            margin-top: 2.5rem;
+            margin-top: 1.9rem;
             display: flex;
-            gap: 1.25rem;
+            gap: 1rem;
         }
 
-        /* App Layout */
         #app {
             display: none;
-            gap: 2.5rem;
+            gap: 1.6rem;
             flex: 1;
             overflow: hidden;
-            padding-bottom: 2rem;
+            min-height: 0;
         }
 
         .sidebar {
             width: var(--sidebar-width);
             display: flex;
             flex-direction: column;
-            gap: 2rem;
-            overflow-y: auto;
-            padding-right: 0.5rem;
+            gap: 1rem;
+            background: linear-gradient(180deg, rgba(255, 249, 242, 0.88), rgba(247, 238, 228, 0.76));
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 1.4rem;
+            backdrop-filter: blur(var(--glass-blur));
+            box-shadow: var(--shadow);
         }
 
         .main-content {
@@ -223,95 +228,163 @@
             border-radius: 32px;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 15px 45px -10px rgba(44, 36, 32, 0.08);
+            box-shadow: var(--shadow);
+            min-width: 0;
         }
 
-        .sidebar-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(var(--glass-blur));
-            border: 1px solid var(--border);
-            border-radius: 28px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px -5px rgba(44, 36, 32, 0.05);
+        .brand {
+            padding: 0.6rem 0.4rem 1rem;
+            border-bottom: 1px solid var(--border);
         }
 
-        .sidebar-card h2 {
-            font-size: 1.25rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+        .brand h2 {
             color: var(--primary);
+            font-size: 1.8rem;
+            letter-spacing: -0.03em;
+        }
+
+        .brand p {
+            margin-top: 0.35rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .nav-group,
+        .meta-card {
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1rem;
+        }
+
+        .nav-group h3,
+        .meta-card h3 {
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.85rem;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .nav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .nav-btn {
+            width: 100%;
+            justify-content: flex-start;
+            background: transparent;
+            color: var(--text);
+            border: 1px solid transparent;
+        }
+
+        .nav-btn.active {
+            background: rgba(191, 90, 54, 0.1);
+            border-color: rgba(191, 90, 54, 0.18);
+            color: var(--primary-dark);
+        }
+
+        .user-chip {
+            display: grid;
+            gap: 0.35rem;
+            padding: 0.95rem 1rem;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(191, 90, 54, 0.12), rgba(35, 70, 70, 0.08));
+            border: 1px solid rgba(191, 90, 54, 0.15);
+        }
+
+        .user-chip strong {
+            font-size: 1rem;
+        }
+
+        .user-chip span {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .page-header {
+            padding: 1.8rem 2rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255,255,255,0.36), rgba(255,255,255,0.14));
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            letter-spacing: -0.03em;
+        }
+
+        .page-header p {
+            margin-top: 0.45rem;
+            color: var(--text-muted);
         }
 
         .list {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         .list-item {
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.64);
             border: 1px solid var(--border);
-            padding: 0.85rem 1.1rem;
+            padding: 0.95rem 1rem;
             border-radius: 14px;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
             word-break: break-all;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.7rem;
             transition: transform 0.2s ease;
         }
 
         .list-item:hover {
             transform: translateX(4px);
-            background: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.84);
         }
 
-        /* Chat Area */
-        .chat-header {
-            padding: 2rem 2.5rem;
-            border-bottom: 1px solid var(--border);
+        .page-body {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 1.8rem 2rem 2rem;
+        }
+
+        .page {
+            display: none;
+            height: 100%;
+        }
+
+        .page.active {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .user-info h3 {
-            font-size: 1.3rem;
-            margin-bottom: 0.3rem;
-            color: var(--text);
-        }
-
-        .user-info p {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-weight: 700;
+            flex-direction: column;
         }
 
         #messages {
             flex: 1;
             overflow-y: auto;
-            padding: 2.5rem;
+            padding-right: 0.4rem;
             display: flex;
             flex-direction: column;
-            gap: 1.75rem;
+            gap: 1rem;
             scroll-behavior: smooth;
+            min-height: 260px;
         }
 
         .message {
             max-width: 85%;
-            padding: 1.25rem 1.5rem;
+            padding: 1rem 1.15rem;
             border-radius: 20px;
-            line-height: 1.7;
-            font-size: 1rem;
-            position: relative;
-            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 15px rgba(44, 36, 32, 0.03);
+            line-height: 1.65;
+            font-size: 0.97rem;
+            animation: fadeIn 0.3s ease;
+            box-shadow: 0 12px 24px -20px rgba(44, 36, 32, 0.4);
+            white-space: pre-wrap;
         }
 
         .message-user {
@@ -323,36 +396,29 @@
 
         .message-assistant {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.88);
             border: 1px solid var(--border);
             border-bottom-left-radius: 4px;
             color: var(--text);
         }
 
-        .message code {
-            font-family: 'JetBrains Mono', monospace;
-            background: rgba(44, 36, 32, 0.05);
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-
         .chat-input-area {
-            padding: 2.5rem;
-            border-top: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.2);
+            margin-top: 1.4rem;
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.56);
         }
 
         .input-wrapper {
-            position: relative;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
+            gap: 0.9rem;
         }
 
         textarea {
             resize: none;
-            background: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.74);
             border-radius: 20px;
         }
 
@@ -360,33 +426,77 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 0.5rem;
             font-size: 0.9rem;
-            min-height: 1.5rem;
+            min-height: 1.6rem;
+            gap: 1rem;
         }
 
         .status-text {
             color: var(--text-muted);
-            font-style: italic;
         }
 
-        /* Admin Dashboard */
+        .status-text.success {
+            color: var(--success);
+        }
+
+        .status-text.error {
+            color: var(--error);
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.2rem;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.35rem;
+        }
+
+        .panel h2 {
+            font-size: 1.28rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.4rem;
+        }
+
+        .panel p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            line-height: 1.55;
+        }
+
+        .panel .btn + .btn {
+            margin-top: 0.7rem;
+        }
+
+        .documents-list {
+            margin-top: 1rem;
+        }
+
+        .doc-meta {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+
         .admin-dashboard {
             display: grid;
-            gap: 2rem;
-            padding: 1rem 0;
+            gap: 1.3rem;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1.5rem;
+            gap: 1rem;
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.58);
             border: 1px solid var(--border);
-            padding: 1.5rem;
+            padding: 1.3rem;
             border-radius: 20px;
             text-align: center;
         }
@@ -403,12 +513,12 @@
             font-size: 2rem;
             font-weight: 700;
             color: var(--primary);
-            font-family: Georgia, serif;
+            font-family: 'Fraunces', serif;
         }
 
         .admin-table-container {
             overflow-x: auto;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.42);
             border-radius: 20px;
             border: 1px solid var(--border);
         }
@@ -420,13 +530,13 @@
         }
 
         th, td {
-            padding: 1rem 1.25rem;
+            padding: 0.95rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
 
         th {
-            font-family: Georgia, serif;
+            font-family: 'Fraunces', serif;
             color: var(--primary);
             font-weight: 700;
             background: rgba(255, 255, 255, 0.2);
@@ -440,20 +550,23 @@
             font-size: 1rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin: 1.5rem 0 1rem;
+            letter-spacing: 0.08em;
+            margin: 1.3rem 0 0.9rem;
             display: block;
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
         }
 
-        .admin-settings {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
+        .password-card {
+            max-width: 620px;
         }
 
-        /* Scrollbar */
+        .password-hint {
+            margin-top: 0.75rem;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+        }
+
         ::-webkit-scrollbar {
             width: 10px;
         }
@@ -463,34 +576,75 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(207, 92, 54, 0.1);
+            background: rgba(191, 90, 54, 0.12);
             border-radius: 10px;
             border: 3px solid transparent;
             background-clip: content-box;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(207, 92, 54, 0.2);
+            background: rgba(191, 90, 54, 0.2);
             border: 3px solid transparent;
             background-clip: content-box;
         }
 
         @media (max-width: 1024px) {
-            .container { padding: 1.5rem; }
-            #app { flex-direction: column; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; }
-            .main-content { min-height: 600px; }
+            .container {
+                padding: 1rem;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            #app {
+                flex-direction: column;
+                overflow: visible;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .main-content {
+                min-height: 760px;
+            }
+
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .auth-card,
+            .main-content,
+            .sidebar {
+                border-radius: 24px;
+            }
+
+            .auth-footer,
+            .status-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-header,
+            .page-body {
+                padding-left: 1.2rem;
+                padding-right: 1.2rem;
+            }
+
+            .message {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Auth View -->
         <section id="auth" class="animate-fade">
             <div class="auth-card">
                 <div class="auth-header">
-                    <h1>Local AI</h1>
-                    <p>Private, Secure, Locally Hosted</p>
+                    <h1>VaultMind</h1>
+                    <p>Private workspace for chat, documents, and account settings.</p>
                 </div>
                 <div class="form-group">
                     <label>Username</label>
@@ -510,101 +664,154 @@
             </div>
         </section>
 
-        <!-- Main App View -->
         <section id="app">
             <aside class="sidebar animate-slide">
-                <div class="sidebar-card">
-                    <h2>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Documents
-                    </h2>
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <input id="fileInput" type="file" accept=".pdf,.txt" style="display: none;">
-                        <button onclick="document.getElementById('fileInput').click()" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
-                            Choose File
-                        </button>
-                        <button id="uploadBtn" class="btn btn-primary">
-                            Upload Document
-                        </button>
-                    </div>
-                    <ul id="documents" class="list"></ul>
+                <div class="brand">
+                    <h2>VaultMind</h2>
+                    <p>Split into focused views so chat, files, and credentials stay separate.</p>
                 </div>
 
-                <div id="adminWrap" class="sidebar-card">
-                    <h2>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        Admin Dashboard
-                    </h2>
-                    
-                    <div class="admin-dashboard">
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <h4>Users</h4>
-                                <div id="statUsers" class="value">0</div>
-                            </div>
-                            <div class="stat-card">
-                                <h4>Files</h4>
-                                <div id="statDocs" class="value">0</div>
-                            </div>
-                        </div>
-
-                        <span class="admin-section-title">User Registry</span>
-                        <ul id="adminUsers" class="list"></ul>
-
-                        <span class="admin-section-title">Global Documents</span>
-                        <div class="admin-table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>File</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminDocuments"></tbody>
-                            </table>
-                        </div>
+                <div class="meta-card">
+                    <div class="user-chip">
+                        <strong id="who">Guest</strong>
+                        <span id="role">Not Logged In</span>
                     </div>
+                </div>
 
-                    <div class="admin-settings">
-                        <span class="admin-section-title">Vault Credentials</span>
-                        <div class="form-group">
-                            <input id="newAdminUser" type="text" placeholder="New Admin Username">
-                        </div>
-                        <div class="form-group">
-                            <input id="newAdminPass" type="password" placeholder="New Admin Password">
-                        </div>
-                        <button id="updateAdminBtn" class="btn btn-secondary" style="width: 100%;">Update Credentials</button>
+                <div class="nav-group">
+                    <h3>Navigation</h3>
+                    <div class="nav-list">
+                        <button class="btn nav-btn" data-route="chat">Chat Workspace</button>
+                        <button class="btn nav-btn" data-route="documents">Uploaded Documents</button>
+                        <button class="btn nav-btn" data-route="password">Change Password</button>
+                        <button id="adminNavBtn" class="btn nav-btn" data-route="admin" style="display:none;">Admin Dashboard</button>
                     </div>
+                </div>
+
+                <div class="meta-card">
+                    <h3>Session</h3>
+                    <button id="logoutBtn" class="btn btn-secondary" style="width: 100%;">
+                        Logout
+                    </button>
                 </div>
             </aside>
 
             <main class="main-content animate-fade">
-                <header class="chat-header">
-                    <div class="user-info">
-                        <h3 id="who">Guest</h3>
-                        <p id="role">Not Logged In</p>
+                <section id="page-chat" class="page">
+                    <div class="page-header">
+                        <h1>Chat Workspace</h1>
+                        <p>Talk to the model here. Documents are managed on their own page.</p>
                     </div>
-                    <button id="logoutBtn" class="btn btn-secondary btn-sm">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        Logout
-                    </button>
-                </header>
-
-                <div id="messages"></div>
-
-                <div class="chat-input-area">
-                    <div class="input-wrapper">
-                        <textarea id="prompt" rows="3" placeholder="Type a message or mention a document..."></textarea>
-                        <div class="status-bar">
-                            <span id="appStatus" class="status-text"></span>
-                            <button id="sendBtn" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;">
-                                Send
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                            </button>
+                    <div class="page-body">
+                        <div id="messages"></div>
+                        <div class="chat-input-area">
+                            <div class="input-wrapper">
+                                <textarea id="prompt" rows="3" placeholder="Type a message or mention a document name..."></textarea>
+                                <div class="status-bar">
+                                    <span id="appStatus" class="status-text"></span>
+                                    <button id="sendBtn" class="btn btn-primary" style="width: auto;">
+                                        Send
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
+
+                <section id="page-documents" class="page">
+                    <div class="page-header">
+                        <h1>Uploaded Documents</h1>
+                        <p>Upload and review your stored files here instead of mixing them into the chat screen.</p>
+                    </div>
+                    <div class="page-body">
+                        <div class="panel-grid">
+                            <div class="panel">
+                                <h2>Upload New File</h2>
+                                <p>PDF and TXT files are supported. Files are encrypted before being stored.</p>
+                                <input id="fileInput" type="file" accept=".pdf,.txt" style="display:none;">
+                                <button id="chooseFileBtn" class="btn btn-secondary" style="width: 100%;">Choose File</button>
+                                <button id="uploadBtn" class="btn btn-primary">Upload Document</button>
+                                <div class="password-hint" id="selectedFileName">No file selected.</div>
+                            </div>
+
+                            <div class="panel">
+                                <h2>Your Library</h2>
+                                <p id="documentsSummary">No documents uploaded yet.</p>
+                                <ul id="documents" class="list documents-list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-password" class="page">
+                    <div class="page-header">
+                        <h1>Change Password</h1>
+                        <p>This page is only for password updates, separate from documents and chat.</p>
+                    </div>
+                    <div class="page-body">
+                        <div class="panel password-card">
+                            <h2>Update Your Password</h2>
+                            <p>Enter your current password, then set a new password with at least 6 characters.</p>
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input id="currentPassword" type="password" placeholder="Current password">
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input id="newPassword" type="password" placeholder="New password">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input id="confirmPassword" type="password" placeholder="Confirm new password">
+                            </div>
+                            <button id="changePasswordBtn" class="btn btn-primary">Save New Password</button>
+                            <div id="passwordStatus" class="password-hint"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-admin" class="page">
+                    <div class="page-header">
+                        <h1>Admin Dashboard</h1>
+                        <p>Monitor users and globally uploaded documents from an isolated admin view.</p>
+                    </div>
+                    <div class="page-body">
+                        <div class="admin-dashboard">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <h4>Users</h4>
+                                    <div id="statUsers" class="value">0</div>
+                                </div>
+                                <div class="stat-card">
+                                    <h4>Files</h4>
+                                    <div id="statDocs" class="value">0</div>
+                                </div>
+                                <div class="stat-card">
+                                    <h4>Messages</h4>
+                                    <div id="statMessages" class="value">0</div>
+                                </div>
+                            </div>
+
+                            <span class="admin-section-title">User Registry</span>
+                            <ul id="adminUsers" class="list"></ul>
+
+                            <span class="admin-section-title">Global Documents</span>
+                            <div class="admin-table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>File</th>
+                                            <th>Uploaded</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminDocuments"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
         </section>
     </div>
@@ -616,14 +823,22 @@
         const appStatus = document.getElementById("appStatus");
         const messages = document.getElementById("messages");
         const documents = document.getElementById("documents");
-        const adminWrap = document.getElementById("adminWrap");
         const adminDocuments = document.getElementById("adminDocuments");
         const adminUsers = document.getElementById("adminUsers");
         const who = document.getElementById("who");
         const role = document.getElementById("role");
-
         const statUsers = document.getElementById("statUsers");
         const statDocs = document.getElementById("statDocs");
+        const statMessages = document.getElementById("statMessages");
+        const adminNavBtn = document.getElementById("adminNavBtn");
+        const passwordStatus = document.getElementById("passwordStatus");
+        const documentsSummary = document.getElementById("documentsSummary");
+        const selectedFileName = document.getElementById("selectedFileName");
+        const pageNodes = Object.fromEntries(
+            Array.from(document.querySelectorAll(".page")).map(node => [node.id.replace("page-", ""), node])
+        );
+        const navButtons = Array.from(document.querySelectorAll("[data-route]"));
+        let currentState = { authenticated: false };
 
         const api = async (path, options = {}) => {
             const response = await fetch(path, {
@@ -643,7 +858,7 @@
             node.className = "status-text " + type;
         };
 
-        const renderList = (node, rows) => {
+        const renderList = (node, rows, mapper) => {
             node.innerHTML = "";
             if (!rows.length) {
                 const li = document.createElement("li");
@@ -653,15 +868,7 @@
                 node.appendChild(li);
                 return;
             }
-            rows.forEach(text => {
-                const li = document.createElement("li");
-                li.className = "list-item animate-fade";
-                li.innerHTML = `
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                    ${text}
-                `;
-                node.appendChild(li);
-            });
+            rows.forEach(row => node.appendChild(mapper(row)));
         };
 
         const renderMessages = rows => {
@@ -675,33 +882,65 @@
             messages.scrollTop = messages.scrollHeight;
         };
 
+        const renderDocumentItem = doc => {
+            const li = document.createElement("li");
+            li.className = "list-item animate-fade";
+
+            const icon = document.createElement("span");
+            icon.textContent = "•";
+            icon.style.color = "var(--primary)";
+            icon.style.fontSize = "1.3rem";
+
+            const name = document.createElement("span");
+            name.textContent = doc.filename;
+
+            const meta = document.createElement("span");
+            meta.className = "doc-meta";
+            meta.textContent = "#" + doc.id;
+
+            li.append(icon, name, meta);
+            return li;
+        };
+
         const renderAdminDocs = rows => {
             adminDocuments.innerHTML = "";
             if (!rows.length) {
-                adminDocuments.innerHTML = "<tr><td colspan='3' style='text-align:center'>No documents.</td></tr>";
+                adminDocuments.innerHTML = "<tr><td colspan='4' style='text-align:center'>No documents.</td></tr>";
                 return;
             }
             rows.forEach(doc => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${doc.username}</td>
-                    <td>${doc.filename}</td>
-                    <td><button class="btn btn-danger btn-sm" onclick="deleteDoc(${doc.id})">Delete</button></td>
-                `;
+                const userCell = document.createElement("td");
+                userCell.textContent = doc.username;
+
+                const fileCell = document.createElement("td");
+                fileCell.textContent = doc.filename;
+
+                const uploadedCell = document.createElement("td");
+                uploadedCell.textContent = doc.uploadedAt;
+
+                const actionCell = document.createElement("td");
+                const button = document.createElement("button");
+                button.className = "btn btn-danger";
+                button.textContent = "Delete";
+                button.addEventListener("click", () => deleteDoc(doc.id));
+                actionCell.appendChild(button);
+
+                tr.append(userCell, fileCell, uploadedCell, actionCell);
                 adminDocuments.appendChild(tr);
             });
         };
 
         const renderAdminUsers = rows => {
-            adminUsers.innerHTML = "";
-            rows.forEach(u => {
+            renderList(adminUsers, rows, u => {
                 const li = document.createElement("li");
                 li.className = "list-item animate-fade";
-                li.innerHTML = `
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <strong>${u.username}</strong> (${u.role})
-                `;
-                adminUsers.appendChild(li);
+                const name = document.createElement("strong");
+                name.textContent = u.username;
+                const label = document.createElement("span");
+                label.textContent = ` (${u.role})`;
+                li.append(name, label);
+                return li;
             });
         };
 
@@ -720,10 +959,38 @@
 
         window.deleteDoc = deleteDoc;
 
+        const resolveRoute = () => {
+            const route = (location.hash || "#chat").replace("#", "");
+            if (route === "admin" && currentState.role !== "admin") {
+                return "chat";
+            }
+            return pageNodes[route] ? route : "chat";
+        };
+
+        const showPage = route => {
+            Object.entries(pageNodes).forEach(([name, node]) => {
+                node.classList.toggle("active", name === route);
+            });
+            navButtons.forEach(button => {
+                button.classList.toggle("active", button.dataset.route === route);
+            });
+        };
+
+        const syncRoute = () => {
+            const route = resolveRoute();
+            if (location.hash !== "#" + route) {
+                location.hash = route;
+                return;
+            }
+            showPage(route);
+        };
+
         const renderState = state => {
+            currentState = state;
             if (!state.authenticated) {
                 auth.style.display = "flex";
                 app.style.display = "none";
+                location.hash = "chat";
                 return;
             }
 
@@ -732,17 +999,22 @@
             who.textContent = state.username;
             role.textContent = state.role;
             renderMessages(state.messages || []);
-            renderList(documents, (state.documents || []).map(doc => doc.filename));
-            
+            renderList(documents, state.documents || [], renderDocumentItem);
+            documentsSummary.textContent = (state.documents || []).length
+                ? `${state.documents.length} document${state.documents.length === 1 ? "" : "s"} uploaded`
+                : "No documents uploaded yet.";
+
             if (state.role === "admin") {
-                adminWrap.style.display = "block";
+                adminNavBtn.style.display = "inline-flex";
                 renderAdminDocs(state.adminDocuments || []);
                 renderAdminUsers(state.adminUsers || []);
-                statUsers.textContent = state.adminStats.totalUsers;
-                statDocs.textContent = state.adminStats.totalDocuments;
+                statUsers.textContent = state.adminStats.totalUsers ?? 0;
+                statDocs.textContent = state.adminStats.totalDocuments ?? 0;
+                statMessages.textContent = state.adminStats.totalMessages ?? 0;
             } else {
-                adminWrap.style.display = "none";
+                adminNavBtn.style.display = "none";
             }
+            syncRoute();
         };
 
         const refresh = async () => {
@@ -772,6 +1044,7 @@
         document.getElementById("logoutBtn").addEventListener("click", async () => {
             await api("/api/logout", { method: "POST", body: "{}" });
             setStatus(appStatus, "");
+            passwordStatus.textContent = "";
             renderState({ authenticated: false });
         });
 
@@ -793,6 +1066,15 @@
             } catch (error) {
                 setStatus(appStatus, error.message, "error");
             }
+        });
+
+        document.getElementById("chooseFileBtn").addEventListener("click", () => {
+            document.getElementById("fileInput").click();
+        });
+
+        document.getElementById("fileInput").addEventListener("change", event => {
+            const file = event.target.files[0];
+            selectedFileName.textContent = file ? file.name : "No file selected.";
         });
 
         document.getElementById("uploadBtn").addEventListener("click", async () => {
@@ -818,35 +1100,49 @@
                 });
 
                 input.value = "";
+                selectedFileName.textContent = "No file selected.";
                 renderState(state);
                 setStatus(appStatus, `Successfully uploaded ${file.name}`, "success");
+                location.hash = "documents";
                 setTimeout(() => setStatus(appStatus, ""), 3000);
             } catch (error) {
                 setStatus(appStatus, error.message, "error");
             }
         });
 
-        document.getElementById("updateAdminBtn").addEventListener("click", async () => {
-            const username = document.getElementById("newAdminUser").value.trim();
-            const password = document.getElementById("newAdminPass").value.trim();
-            if (!username || !password) {
-                setStatus(appStatus, "Username and password are required", "error");
+        document.getElementById("changePasswordBtn").addEventListener("click", async () => {
+            const currentPassword = document.getElementById("currentPassword").value.trim();
+            const newPassword = document.getElementById("newPassword").value.trim();
+            const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                passwordStatus.textContent = "All password fields are required.";
+                passwordStatus.style.color = "var(--error)";
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                passwordStatus.textContent = "New password and confirmation do not match.";
+                passwordStatus.style.color = "var(--error)";
                 return;
             }
 
             try {
-                setStatus(appStatus, "Updating credentials...", "success");
-                const state = await api("/api/admin/update", {
+                passwordStatus.textContent = "Updating password...";
+                passwordStatus.style.color = "var(--success)";
+                const state = await api("/api/password", {
                     method: "POST",
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ currentPassword, newPassword })
                 });
                 renderState(state);
-                document.getElementById("newAdminUser").value = "";
-                document.getElementById("newAdminPass").value = "";
-                setStatus(appStatus, "Admin credentials updated successfully", "success");
-                setTimeout(() => setStatus(appStatus, ""), 3000);
+                document.getElementById("currentPassword").value = "";
+                document.getElementById("newPassword").value = "";
+                document.getElementById("confirmPassword").value = "";
+                passwordStatus.textContent = "Password updated successfully.";
+                passwordStatus.style.color = "var(--success)";
             } catch (error) {
-                setStatus(appStatus, error.message, "error");
+                passwordStatus.textContent = error.message;
+                passwordStatus.style.color = "var(--error)";
             }
         });
 
@@ -856,6 +1152,14 @@
                 document.getElementById("sendBtn").click();
             }
         });
+
+        navButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                location.hash = button.dataset.route;
+            });
+        });
+
+        window.addEventListener("hashchange", syncRoute);
 
         refresh().catch(error => setStatus(authStatus, error.message, "error"));
     </script>
