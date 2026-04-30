@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VaultMind Class Diagram - Pure HTML/CSS</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --class-bg: #ffffff;
+            --interface-bg: #e1f5fe;
+            --border-color: #2c3e50;
+            --text-color: #34495e;
+            --header-bg: #34495e;
+            --header-text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin-bottom: 40px; }
+
+        .diagram-container {
+            position: relative;
+            width: 1200px;
+            height: 900px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Class Box Styling */
+        .class-box {
+            position: absolute;
+            width: 200px;
+            background: var(--class-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 12px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+
+        .interface { background: var(--interface-bg); }
+
+        .class-header {
+            background: var(--header-bg);
+            color: var(--header-text);
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .interface .class-header {
+            background: #0288d1;
+        }
+
+        .class-content {
+            padding: 5px;
+        }
+
+        .section-title {
+            font-style: italic;
+            border-bottom: 1px solid #ddd;
+            margin: 5px 0 2px 0;
+            font-weight: bold;
+        }
+
+        .item { padding: 1px 0; }
+
+        /* Positioning Classes */
+        #main-class { top: 50px; left: 500px; width: 220px; }
+
+        #auth-service { top: 300px; left: 50px; }
+        #db-auth-service { top: 550px; left: 50px; }
+
+        #data-manager { top: 300px; left: 280px; }
+        #sql-data-manager { top: 550px; left: 280px; }
+
+        #database { top: 300px; left: 510px; }
+        #postgres-db { top: 550px; left: 510px; }
+
+        #ai-client { top: 300px; left: 740px; }
+        #ollama-ai { top: 550px; left: 740px; }
+
+        #encryption { top: 300px; left: 970px; }
+        #aes-encryption { top: 550px; left: 970px; }
+
+        #sessions { top: 50px; left: 850px; width: 180px; }
+        #session-record { top: 50px; left: 1050px; width: 140px; }
+
+        /* SVG Connections Overlay */
+        .connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        polyline, line {
+            fill: none;
+            stroke: var(--border-color);
+            stroke-width: 2;
+        }
+
+        .dependency { stroke-dasharray: 5,5; }
+        .implementation { stroke-dasharray: 8,4; }
+
+        marker#arrow { fill: var(--border-color); }
+        marker#triangle { fill: white; stroke: var(--border-color); stroke-width: 1; }
+    </style>
+</head>
+<body>
+
+    <h1>VaultMind Architecture - Class Diagram</h1>
+
+    <div class="diagram-container">
+        <!-- SVG Connections -->
+        <svg class="connections">
+            <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orientation="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,6 L9,3 z" />
+                </marker>
+                <marker id="triangle" markerWidth="12" markerHeight="12" refX="11" refY="6" orientation="auto">
+                    <path d="M1,1 L1,11 L11,6 z" fill="white" stroke="#2c3e50" />
+                </marker>
+            </defs>
+
+            <!-- Main to Interfaces (Dependencies) -->
+            <path d="M610,215 L610,250 L150,250 L150,300" class="dependency" marker-end="url(#arrow)" />
+            <path d="M610,215 L610,250 L380,250 L380,300" class="dependency" marker-end="url(#arrow)" />
+            <path d="M610,215 L610,300" class="dependency" marker-end="url(#arrow)" />
+            <path d="M610,215 L610,250 L840,250 L840,300" class="dependency" marker-end="url(#arrow)" />
+            <path d="M610,215 L610,250 L1070,250 L1070,300" class="dependency" marker-end="url(#arrow)" />
+
+            <!-- Implementations to Interfaces (Realization) -->
+            <line x1="150" y1="550" x2="150" y2="445" marker-end="url(#triangle)" />
+            <line x1="380" y1="550" x2="380" y2="445" marker-end="url(#triangle)" />
+            <line x1="610" y1="550" x2="610" y2="445" marker-end="url(#triangle)" />
+            <line x1="840" y1="550" x2="840" y2="445" marker-end="url(#triangle)" />
+            <line x1="1070" y1="550" x2="1070" y2="445" marker-end="url(#triangle)" />
+
+            <!-- Sub-dependencies -->
+            <path d="M380,680 L380,720 L610,720 L610,680" class="dependency" marker-end="url(#arrow)" />
+            <path d="M380,680 L380,750 L840,750 L840,680" class="dependency" marker-end="url(#arrow)" />
+            <path d="M380,680 L380,780 L1070,780 L1070,680" class="dependency" marker-end="url(#arrow)" />
+            <path d="M150,680 L150,810 L610,810 L610,680" class="dependency" marker-end="url(#arrow)" />
+        </svg>
+
+        <!-- Classes -->
+        <div class="class-box" id="main-class">
+            <div class="class-header">Main</div>
+            <div class="class-content">
+                <div class="section-title">Fields</div>
+                <div class="item">- Database db</div>
+                <div class="item">- EncryptionProvider crypto</div>
+                <div class="item">- AiClient ai</div>
+                <div class="item">- AuthService auth</div>
+                <div class="section-title">Methods</div>
+                <div class="item">+ main(args)</div>
+                <div class="item">+ login(body)</div>
+                <div class="item">+ chat(body)</div>
+            </div>
+        </div>
+
+        <!-- Row 2: Interfaces -->
+        <div class="class-box interface" id="auth-service">
+            <div class="class-header">&lt;&lt;interface&gt;&gt;<br>AuthService</div>
+            <div class="class-content">
+                <div class="section-title">Methods</div>
+                <div class="item">+ login(u, p)</div>
+                <div class="item">+ signup(u, p)</div>
+            </div>
+        </div>
+
+        <div class="class-box interface" id="data-manager">
+            <div class="class-header">&lt;&lt;interface&gt;&gt;<br>DataManager</div>
+            <div class="class-content">
+                <div class="section-title">Methods</div>
+                <div class="item">+ saveDoc(id, f, b)</div>
+                <div class="item">+ chat(id, msg)</div>
+            </div>
+        </div>
+
+        <div class="class-box interface" id="database">
+            <div class="class-header">&lt;&lt;interface&gt;&gt;<br>Database</div>
+            <div class="class-content">
+                <div class="section-title">Methods</div>
+                <div class="item">+ update(sql, p)</div>
+                <div class="item">+ queryOne(sql, m, p)</div>
+            </div>
+        </div>
+
+        <div class="class-box interface" id="ai-client">
+            <div class="class-header">&lt;&lt;interface&gt;&gt;<br>AiClient</div>
+            <div class="class-content">
+                <div class="section-title">Methods</div>
+                <div class="item">+ generate(prompt)</div>
+            </div>
+        </div>
+
+        <div class="class-box interface" id="encryption">
+            <div class="class-header">&lt;&lt;interface&gt;&gt;<br>EncryptionProvider</div>
+            <div class="class-content">
+                <div class="section-title">Methods</div>
+                <div class="item">+ encrypt(data)</div>
+                <div class="item">+ decrypt(data)</div>
+            </div>
+        </div>
+
+        <!-- Row 3: Implementations -->
+        <div class="class-box" id="db-auth-service">
+            <div class="class-header">DatabaseAuthService</div>
+            <div class="class-content">
+                <div class="section-title">Fields</div>
+                <div class="item">- Database db</div>
+                <div class="section-title">Methods</div>
+                <div class="item">+ login(...)</div>
+            </div>
+        </div>
+
+        <div class="class-box" id="sql-data-manager">
+            <div class="class-header">SqlDataManager</div>
+            <div class="class-content">
+                <div class="section-title">Fields</div>
+                <div class="item">- Database db</div>
+                <div class="item">- EncryptionProvider crypto</div>
+                <div class="item">- AiClient ai</div>
+            </div>
+        </div>
+
+        <div class="class-box" id="postgres-db">
+            <div class="class-header">PostgresDatabase</div>
+            <div class="class-content">
+                <div class="section-title">Fields</div>
+                <div class="item">- Connection conn</div>
+                <div class="section-title">Methods</div>
+                <div class="item">+ init()</div>
+                <div class="item">+ update(...)</div>
+            </div>
+        </div>
+
+        <div class="class-box" id="ollama-ai">
+            <div class="class-header">OllamaAiClient</div>
+            <div class="class-content">
+                <div class="section-title">Methods</div>
+                <div class="item">+ generate(...)</div>
+            </div>
+        </div>
+
+        <div class="class-box" id="aes-encryption">
+            <div class="class-header">AesGcmEncryption</div>
+            <div class="class-content">
+                <div class="section-title">Methods</div>
+                <div class="item">+ encrypt(...)</div>
+                <div class="item">+ decrypt(...)</div>
+            </div>
+        </div>
+
+        <!-- Support -->
+        <div class="class-box" id="sessions">
+            <div class="class-header">Sessions</div>
+            <div class="class-content">
+                <div class="item">+ start(res, session)</div>
+                <div class="item">+ current(req)</div>
+                <div class="item">+ require(req)</div>
+            </div>
+        </div>
+
+        <div class="class-box" id="session-record">
+            <div class="class-header">&lt;&lt;record&gt;&gt;<br>Session</div>
+            <div class="class-content">
+                <div class="item">+ int id</div>
+                <div class="item">+ String username</div>
+                <div class="item">+ String role</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; font-size: 0.9em; color: #666;">
+        <span style="border-bottom: 2px dashed #2c3e50; padding: 0 10px;">- - - ></span> Dependency (Uses) &nbsp;&nbsp;&nbsp;
+        <span style="border-bottom: 2px solid #2c3e50; position: relative; padding: 0 10px;">——▷</span> Implementation (Realization)
+    </div>
+
+</body>
+</html>

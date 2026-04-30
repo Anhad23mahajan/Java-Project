@@ -21,12 +21,12 @@ CREATE DATABASE localai;
 3. Set env vars if your local defaults differ:
 
 ```powershell
-$env:LOCALAI_DB_URL="jdbc:postgresql://localhost:5432/localai"
-$env:LOCALAI_DB_USER="postgres"
-$env:LOCALAI_DB_PASSWORD="password"
-$env:LOCALAI_OLLAMA_MODEL="mistral"
-$env:LOCALAI_AES_KEY="replace-with-a-32-byte-secret"
-$env:LOCALAI_PORT="8080"
+$env:VAULTMIND_DB_URL="jdbc:postgresql://localhost:5432/localai"
+$env:VAULTMIND_DB_USER="postgres"
+$env:VAULTMIND_DB_PASSWORD="password"
+$env:VAULTMIND_OLLAMA_MODEL="mistral"
+$env:VAULTMIND_AES_KEY="replace-with-a-32-byte-secret"
+$env:VAULTMIND_PORT="8080"
 ```
 
 4. Start Ollama, then run:

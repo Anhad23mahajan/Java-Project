@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #bf5a36;
@@ -662,6 +663,92 @@
             font-size: 0.88rem;
         }
 
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 1rem 1.4rem;
+            border-radius: 16px;
+            background: var(--card-bg-strong);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border);
+            color: var(--text);
+            box-shadow: var(--shadow);
+            font-size: 0.92rem;
+            font-weight: 500;
+            pointer-events: auto;
+            animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 280px;
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--error); }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(32px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0) scale(1); }
+            to { opacity: 0; transform: translateX(32px) scale(0.95); }
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 0.5rem 0;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
+        }
+
+        /* Markdown Formatting */
+        .message-content { width: 100%; }
+        .message-content p:not(:last-child) { margin-bottom: 0.8rem; }
+        .message-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            font-size: 0.88em;
+        }
+        [data-theme='dark'] .message-content code { background: rgba(255, 255, 255, 0.1); }
+        .message-content pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 0.8rem 0;
+        }
+        [data-theme='dark'] .message-content pre { background: rgba(255, 255, 255, 0.05); }
+
         ::-webkit-scrollbar {
             width: 10px;
         }
@@ -734,6 +821,7 @@
     </style>
 </head>
 <body>
+    <div id="toast-container"></div>
     <div class="container">
         <section id="auth" class="animate-fade">
             <div class="auth-card">
@@ -747,10 +835,7 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input id="password" type="password" placeholder="••••••••">
-                </div>
-                <div id="authStatus" class="status-bar" style="margin-bottom: 1rem;">
-                    <span class="status-text"></span>
+                    <input id="password" type="password" placeholder="********">
                 </div>
                 <div class="auth-footer">
                     <button id="loginBtn" class="btn btn-primary">Login</button>
@@ -788,7 +873,7 @@
                         <h3>Session</h3>
                         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                             <button id="themeToggle" class="btn btn-secondary" style="width: 100%;">
-                                🌙 Dark Mode
+                                Dark Mode
                             </button>
                             <button id="logoutBtn" class="btn btn-secondary" style="width: 100%;">
                                 Logout
@@ -808,8 +893,7 @@
                         <div class="chat-input-area">
                             <div class="input-wrapper">
                                 <textarea id="prompt" rows="3" placeholder="Type a message or mention a document name..."></textarea>
-                                <div class="status-bar">
-                                    <span id="appStatus" class="status-text"></span>
+                                <div class="status-bar" style="justify-content: flex-end;">
                                     <button id="sendBtn" class="btn btn-primary" style="width: auto;">
                                         Send
                                     </button>
@@ -922,7 +1006,7 @@
         const setTheme = (theme) => {
             document.documentElement.setAttribute("data-theme", theme);
             localStorage.setItem("theme", theme);
-            themeToggle.textContent = theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
+            themeToggle.textContent = theme === "dark" ? "Light Mode" : "Dark Mode";
         };
 
         const currentTheme = localStorage.getItem("theme") || 
@@ -934,10 +1018,23 @@
             setTheme(newTheme);
         });
 
+        // Toast System
+        const toastContainer = document.getElementById("toast-container");
+        const showToast = (message, type = "success") => {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+            `;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = "toastOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards";
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        };
+
         const auth = document.getElementById("auth");
         const app = document.getElementById("app");
-        const authStatus = document.getElementById("authStatus").querySelector(".status-text");
-        const appStatus = document.getElementById("appStatus");
         const messages = document.getElementById("messages");
         const documents = document.getElementById("documents");
         const adminDocuments = document.getElementById("adminDocuments");
@@ -948,7 +1045,6 @@
         const statDocs = document.getElementById("statDocs");
         const statMessages = document.getElementById("statMessages");
         const adminNavBtn = document.getElementById("adminNavBtn");
-        const passwordStatus = document.getElementById("passwordStatus");
         const documentsSummary = document.getElementById("documentsSummary");
         const selectedFileName = document.getElementById("selectedFileName");
         const pageNodes = Object.fromEntries(
@@ -970,11 +1066,6 @@
             return data;
         };
 
-        const setStatus = (node, text, type = "") => {
-            node.textContent = text || "";
-            node.className = "status-text " + type;
-        };
-
         const renderList = (node, rows, mapper) => {
             node.innerHTML = "";
             if (!rows.length) {
@@ -993,10 +1084,33 @@
             rows.forEach(row => {
                 const div = document.createElement("div");
                 div.className = `message message-${row.role === "assistant" ? "assistant" : "user"}`;
-                div.textContent = row.message;
+                const content = document.createElement("div");
+                content.className = "message-content";
+                content.innerHTML = marked.parse(row.message);
+                div.appendChild(content);
                 messages.appendChild(div);
             });
             messages.scrollTop = messages.scrollHeight;
+        };
+
+        const showTypingIndicator = () => {
+            const div = document.createElement("div");
+            div.id = "typing-indicator-msg";
+            div.className = "message message-assistant";
+            div.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        const hideTypingIndicator = () => {
+            const el = document.getElementById("typing-indicator-msg");
+            if (el) el.remove();
         };
 
         const renderDocumentItem = doc => {
@@ -1015,7 +1129,23 @@
             meta.className = "doc-meta";
             meta.textContent = "#" + doc.id;
 
-            li.append(icon, name, meta);
+            const renameBtn = document.createElement("button");
+            renameBtn.className = "btn btn-secondary";
+            renameBtn.style.padding = "0.4rem 0.8rem";
+            renameBtn.style.fontSize = "0.75rem";
+            renameBtn.style.marginLeft = "1rem";
+            renameBtn.textContent = "Rename";
+            renameBtn.addEventListener("click", () => renameDoc(doc.id, doc.filename));
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "btn btn-danger";
+            deleteBtn.style.padding = "0.4rem 0.8rem";
+            deleteBtn.style.fontSize = "0.75rem";
+            deleteBtn.style.marginLeft = "0.5rem";
+            deleteBtn.textContent = "Delete";
+            deleteBtn.addEventListener("click", () => userDocDelete(doc.id, doc.filename));
+
+            li.append(icon, name, meta, renameBtn, deleteBtn);
             return li;
         };
 
@@ -1056,9 +1186,65 @@
                 name.textContent = u.username;
                 const label = document.createElement("span");
                 label.textContent = ` (${u.role})`;
-                li.append(name, label);
+                
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "btn btn-danger";
+                deleteBtn.style.marginLeft = "auto";
+                deleteBtn.textContent = "Delete User";
+                deleteBtn.addEventListener("click", () => deleteUser(u.id, u.username));
+                
+                if (u.role === 'admin') {
+                    deleteBtn.disabled = true;
+                    deleteBtn.title = "Cannot delete admin users";
+                    deleteBtn.style.opacity = "0.5";
+                }
+
+                li.append(name, label, deleteBtn);
                 return li;
             });
+        };
+
+        const renameDoc = async (id, currentName) => {
+            const newName = prompt("Enter new filename:", currentName);
+            if (!newName || newName === currentName) return;
+            try {
+                const state = await api("/api/rename-document", {
+                    method: "POST",
+                    body: JSON.stringify({ id: String(id), filename: newName })
+                });
+                renderState(state);
+                showToast("Document renamed");
+            } catch (error) {
+                showToast(error.message, "error");
+            }
+        };
+
+        const userDocDelete = async (id, filename) => {
+            if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
+            try {
+                const state = await api("/api/delete-document", {
+                    method: "POST",
+                    body: JSON.stringify({ id: String(id) })
+                });
+                renderState(state);
+                showToast(`Deleted ${filename}`);
+            } catch (error) {
+                showToast(error.message, "error");
+            }
+        };
+
+        const deleteUser = async (id, username) => {
+            if (!confirm(`Are you sure you want to delete user "${username}" and all their data?`)) return;
+            try {
+                const state = await api("/api/admin/delete-user", {
+                    method: "POST",
+                    body: JSON.stringify({ id: String(id) })
+                });
+                renderState(state);
+                showToast(`User ${username} deleted`);
+            } catch (error) {
+                showToast(error.message, "error");
+            }
         };
 
         const deleteDoc = async (id) => {
@@ -1069,12 +1255,14 @@
                     body: JSON.stringify({ id: String(id) })
                 });
                 renderState(state);
+                showToast("Document deleted");
             } catch (error) {
-                alert(error.message);
+                showToast(error.message, "error");
             }
         };
 
         window.deleteDoc = deleteDoc;
+        window.userDocDelete = userDocDelete;
 
         const resolveRoute = () => {
             const route = (location.hash || "#chat").replace("#", "");
@@ -1141,17 +1329,17 @@
 
         const authAction = async path => {
             try {
-                setStatus(authStatus, "Authenticating...");
                 const username = document.getElementById("username").value.trim();
                 const password = document.getElementById("password").value.trim();
+                if (!username || !password) throw new Error("Credentials required");
                 const state = await api(path, {
                     method: "POST",
                     body: JSON.stringify({ username, password })
                 });
                 renderState(state);
-                setStatus(authStatus, "");
+                showToast(path.includes("login") ? "Welcome back!" : "Account created!");
             } catch (error) {
-                setStatus(authStatus, error.message, "error");
+                showToast(error.message, "error");
             }
         };
 
@@ -1160,9 +1348,8 @@
 
         document.getElementById("logoutBtn").addEventListener("click", async () => {
             await api("/api/logout", { method: "POST", body: "{}" });
-            setStatus(appStatus, "");
-            passwordStatus.textContent = "";
             renderState({ authenticated: false });
+            showToast("Logged out");
         });
 
         document.getElementById("sendBtn").addEventListener("click", async () => {
@@ -1171,17 +1358,17 @@
             if (!message) return;
 
             try {
-                setStatus(appStatus, "Ollama is thinking...", "success");
+                showTypingIndicator();
                 const state = await api("/api/chat", {
                     method: "POST",
                     body: JSON.stringify({ message })
                 });
                 prompt.value = "";
+                hideTypingIndicator();
                 renderState(state);
-                setStatus(appStatus, "Reply received", "success");
-                setTimeout(() => setStatus(appStatus, ""), 3000);
             } catch (error) {
-                setStatus(appStatus, error.message, "error");
+                hideTypingIndicator();
+                showToast(error.message, "error");
             }
         });
 
@@ -1198,12 +1385,12 @@
             const input = document.getElementById("fileInput");
             const file = input.files[0];
             if (!file) {
-                setStatus(appStatus, "Please select a file first", "error");
+                showToast("Please select a file first", "error");
                 return;
             }
 
             try {
-                setStatus(appStatus, "Uploading and encrypting...", "success");
+                showToast("Encrypting and uploading...");
                 const contentBase64 = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve(String(reader.result).split(",")[1]);
@@ -1219,11 +1406,10 @@
                 input.value = "";
                 selectedFileName.textContent = "No file selected.";
                 renderState(state);
-                setStatus(appStatus, `Successfully uploaded ${file.name}`, "success");
+                showToast(`Successfully uploaded ${file.name}`);
                 location.hash = "documents";
-                setTimeout(() => setStatus(appStatus, ""), 3000);
             } catch (error) {
-                setStatus(appStatus, error.message, "error");
+                showToast(error.message, "error");
             }
         });
 
@@ -1233,20 +1419,16 @@
             const confirmPassword = document.getElementById("confirmPassword").value.trim();
 
             if (!currentPassword || !newPassword || !confirmPassword) {
-                passwordStatus.textContent = "All password fields are required.";
-                passwordStatus.style.color = "var(--error)";
+                showToast("All password fields are required.", "error");
                 return;
             }
 
             if (newPassword !== confirmPassword) {
-                passwordStatus.textContent = "New password and confirmation do not match.";
-                passwordStatus.style.color = "var(--error)";
+                showToast("New password and confirmation do not match.", "error");
                 return;
             }
 
             try {
-                passwordStatus.textContent = "Updating password...";
-                passwordStatus.style.color = "var(--success)";
                 const state = await api("/api/password", {
                     method: "POST",
                     body: JSON.stringify({ currentPassword, newPassword })
@@ -1255,11 +1437,9 @@
                 document.getElementById("currentPassword").value = "";
                 document.getElementById("newPassword").value = "";
                 document.getElementById("confirmPassword").value = "";
-                passwordStatus.textContent = "Password updated successfully.";
-                passwordStatus.style.color = "var(--success)";
+                showToast("Password updated successfully.");
             } catch (error) {
-                passwordStatus.textContent = error.message;
-                passwordStatus.style.color = "var(--error)";
+                showToast(error.message, "error");
             }
         });
 
@@ -1278,7 +1458,7 @@
 
         window.addEventListener("hashchange", syncRoute);
 
-        refresh().catch(error => setStatus(authStatus, error.message, "error"));
+        refresh().catch(error => showToast(error.message, "error"));
     </script>
 </body>
 </html>
