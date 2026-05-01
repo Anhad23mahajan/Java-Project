@@ -137,7 +137,7 @@ final class OllamaAiClient implements AiClient {
     @Override
     public String generate(String prompt) throws Exception {
         JsonObject b = new JsonObject();
-        b.addProperty("model", "mistral");
+        b.addProperty("model", "tinyllama");
         b.addProperty("prompt", prompt);
         b.addProperty("stream", false);
         HttpRequest req = HttpRequest.newBuilder().uri(URI.create(URL)).POST(HttpRequest.BodyPublishers.ofString(b.toString())).build();

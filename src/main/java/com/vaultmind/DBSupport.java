@@ -26,20 +26,17 @@ interface Database {
     <T> T queryOne(String sql, DB.Mapper<T> mapper, Object... params) throws SQLException;
     <T> List<T> queryAll(String sql, DB.Mapper<T> mapper, Object... params) throws SQLException;
 }
-
 // INHERITANCE: PostgresDatabase implements Database 
 final class PostgresDatabase implements Database {
-    private static final String URL = env("VAULTMIND_DB_URL", "jdbc:postgresql://localhost:5432/localai");
-    private static final String USER = env("VAULTMIND_DB_USER", "postgres");
-    private static final String PASSWORD = env("VAULTMIND_DB_PASSWORD", "password");
+    private static final String URL      = env("VAULTMIND_DB_URL",      "jdbc:postgresql://localhost:5432/vaultmind");
+    private static final String USER     = env("VAULTMIND_DB_USER",     "postgres");
+    private static final String PASSWORD = env("VAULTMIND_DB_PASSWORD", "Anhad@14576");
     private Connection connection;
-
     @Override
     public void init() throws SQLException {
         connection();
         seedAdmin();
     }
-
     private void seedAdmin() throws SQLException {
         if (!exists("SELECT 1 FROM users WHERE role = 'admin'")) {
             update(
@@ -127,14 +124,12 @@ interface EncryptionProvider {
     byte[] encrypt(byte[] data) throws Exception;
     byte[] decrypt(byte[] encrypted) throws Exception;
 }
-
 //   INHERITANCE: AesGcmEncryption implements EncryptionProvider  
 final class AesGcmEncryption implements EncryptionProvider {
     private static final int KEY_LENGTH = 32;
     private static final int IV_LENGTH = 12;
     private static final int TAG_LENGTH_BITS = 128;
     private static final SecureRandom RANDOM = new SecureRandom();
-
     @Override
     public byte[] encrypt(byte[] data) throws Exception {
         byte[] iv = new byte[IV_LENGTH];
@@ -144,7 +139,6 @@ final class AesGcmEncryption implements EncryptionProvider {
         byte[] encrypted = cipher.doFinal(data);
         return ByteBuffer.allocate(IV_LENGTH + encrypted.length).put(iv).put(encrypted).array();
     }
-
     @Override
     public byte[] decrypt(byte[] encrypted) throws Exception {
         ByteBuffer buffer = ByteBuffer.wrap(encrypted);
@@ -156,13 +150,10 @@ final class AesGcmEncryption implements EncryptionProvider {
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(loadKey(), "AES"), new GCMParameterSpec(TAG_LENGTH_BITS, iv));
         return cipher.doFinal(cipherText);
     }
-
     private byte[] loadKey() {
         String raw = System.getenv("VAULTMIND_AES_KEY");
         byte[] key = (raw == null || raw.isBlank() ? "MyFixedKey1234567890123456789012" : raw).getBytes(StandardCharsets.UTF_8);
-        return Arrays.copyOf(key, KEY_LENGTH);
-    }
-}
+        return Arrays.copyOf(key, KEY_LENGTH);} }
 
 final class FileUtil {
     static String readDocument(String filename, byte[] bytes) throws Exception {
@@ -170,9 +161,9 @@ final class FileUtil {
         if (name.endsWith(".txt")) return new String(bytes, StandardCharsets.UTF_8);
         if (name.endsWith(".pdf")) {
             try (PDDocument document = Loader.loadPDF(bytes)) {
-                return new PDFTextStripper().getText(document);
-            }
-        }
+                return new PDFTextStripper().getText(document); }    }
+
+
         throw new ValidationException("Only PDF and TXT files are supported.");
     }
 }
